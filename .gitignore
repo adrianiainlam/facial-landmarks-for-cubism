@@ -1,0 +1,6 @@
+build
+example/CubismSdkForNative-4-r.1/
+example/demo_build/
+example/demo_clean/
+example/demo_dev/
+example/shape_predictor_68_face_landmarks.dat

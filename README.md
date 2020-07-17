@@ -13,7 +13,7 @@ This block diagram shows the intended usage of this library:
 ![Block diagram showing interaction of this library with other components](block_diagram.png)
 
 Video showing me using the example program:
-<https://www.youtube.com/watch?v=Ve9GaeyMytc>
+<https://youtu.be/SZPEKwEqbdI>
 
 
 ## Supporting environments

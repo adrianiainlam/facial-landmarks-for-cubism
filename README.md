@@ -21,7 +21,7 @@ Video showing me using the example program:
 This library was developed and tested only on Ubuntu 18.04 using GCC 7.5.0.
 However I don't think I've used anything that prevents it from being
 cross-platform compatible -- it should still work as long as you have a
-recent C/C++ compiler. (The library should only require C++11. The Cubism
+recent C/C++ compiler. The library should only require C++11. The Cubism
 SDK requires C++14. I have made use of one C++17 library (`<filesystem>`)
 in the example program, but it should be straightforward to change this
 if you don't have C++17 support.
@@ -31,9 +31,10 @@ environment without a `/bin/sh` shell you may have to run the commands
 manually. Hereafter, all build instructions will assume a Linux environment
 where a shell is available.
 
-If your CPU does not support AVX instructions you may want to edit the
-relevant build scripts to remove the `-D USE_AVX_INSTRUCTIONS=1` variable
-(or change it the SSE3 etc). However there could be a penalty in performance.
+If your CPU does not support AVX instructions you may want to edit "build.sh"
+and "example/demo.patch" to remove the `-D USE_AVX_INSTRUCTIONS=1` variable
+(or change AVX to SSE4 or SSE2). However there could be a penalty in
+performance.
 
 ## Build instructions
 
@@ -51,7 +52,8 @@ relevant build scripts to remove the `-D USE_AVX_INSTRUCTIONS=1` variable
 
        git clone --recurse-submodules https://github.com/adrianiainlam/facial-landmarks-for-cubism.git
 
-3. To build the library only:
+3. To build the library only: (Skip this step if you want to build the example
+   program. It will be done automatically.)
 
        cd <path of the git repo>
        ./build.sh
@@ -123,9 +125,23 @@ Due to the differences in hardware and differences in each person's face,
 I have decided to make pretty much every parameter tweakable. The file
 "config.txt" lists and documents all parameters and their default values.
 You can change the values there and pass it to the example program using
-to `-c` argument. If using the library directly, the path to this file
+the `-c` argument. If using the library directly, the path to this file
 should be passed to the constructor (or pass an empty string to use
 default values).
+
+## Troubleshooting
+
+1. Example program crashes with SIGILL (Illegal instruction).
+
+   Your CPU probably doesn't support AVX instructions which is used by dlib.
+   You can confirm this by running
+
+       grep avx /proc/cpuinfo
+
+   If this is the case, try to find out if your CPU supports SSE4 or SSE2,
+   then edit "build.sh" and "example/demo.patch" to change
+   `USE_AVX_INSTRUCTIONS=1` to `USE_SSE4_INSTRUCTIONS=1` or
+   `USE_SSE2_INSTRUCTIONS=1`.
 
 ## License
 

@@ -111,6 +111,10 @@ FacialLandmarkDetector::Params FacialLandmarkDetector::getParams(void) const
         params.rightEyeSmile = 0;
     }
 
+    params.autoBlink = m_cfg.autoBlink;
+    params.autoBreath = m_cfg.autoBreath;
+    params.randomMotion = m_cfg.randomMotion;
+
     return params;
 }
 
@@ -668,6 +672,30 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
                                          line, lineNum);
                     }
                 }
+                else if (paramName == "autoBlink")
+                {
+                    if (!(ss >> m_cfg.autoBlink))
+                    {
+                        throwConfigError(paramName, "bool",
+                                         line, lineNum);
+                    }
+                }
+                else if (paramName == "autoBreath")
+                {
+                    if (!(ss >> m_cfg.autoBreath))
+                    {
+                        throwConfigError(paramName, "bool",
+                                         line, lineNum);
+                    }
+                }
+                else if (paramName == "randomMotion")
+                {
+                    if (!(ss >> m_cfg.randomMotion))
+                    {
+                        throwConfigError(paramName, "bool",
+                                         line, lineNum);
+                    }
+                }
                 else
                 {
                     std::ostringstream oss;
@@ -714,6 +742,9 @@ void FacialLandmarkDetector::populateDefaultConfig(void)
     m_cfg.faceYAngleZeroValue = 1.8;
     m_cfg.faceYAngleDownThreshold = 2.3;
     m_cfg.faceYAngleUpThreshold = 1.3;
+    m_cfg.autoBlink = false;
+    m_cfg.autoBreath = false;
+    m_cfg.randomMotion = false;
 }
 
 void FacialLandmarkDetector::throwConfigError(std::string paramName,

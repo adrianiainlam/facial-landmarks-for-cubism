@@ -38,6 +38,14 @@ lateralInversion 1
 # to person. The following values seem to work OK for my face, but
 # your milage may vary.
 
+# Section 2.0: Live2D automatic functionality
+# Set 1 to enable, 0 to disable.
+# If these are set, the automatic functionality in Live2D will be enabled.
+# Note: If you set auto blink, eye control will be disabled.
+autoBlink 0
+autoBreath 0
+randomMotion 0
+
 # Section 2.1: Face Y direction angle (head pointing up/down)
 # The Y angle is calculated mainly based on the angle formed
 # by the corners and the tip of the nose (hereafter referred

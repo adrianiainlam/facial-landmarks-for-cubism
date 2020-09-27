@@ -46,6 +46,9 @@ public:
         double faceXAngle;
         double faceYAngle;
         double faceZAngle;
+        bool autoBlink;
+        bool autoBreath;
+        bool randomMotion;
         // TODO eyebrows currently not supported...
         // I'd like to include them, but the dlib detection is very
         // noisy and inaccurate (at least for my face).
@@ -137,6 +140,9 @@ private:
         double faceYAngleZeroValue;
         double faceYAngleUpThreshold;
         double faceYAngleDownThreshold;
+        bool autoBlink;
+        bool autoBreath;
+        bool randomMotion;
     } m_cfg;
 };
 

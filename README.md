@@ -15,6 +15,13 @@ This block diagram shows the intended usage of this library:
 Video showing me using the example program:
 <https://youtu.be/SZPEKwEqbdI>
 
+## Spin-off: Mouse Tracking for Cubism
+
+An alternative version using mouse cursor tracking and audio based lip
+syncing instead of face tracking is available at
+<https://github.com/adrianiainlam/mouse-tracker-for-cubism>.
+
+The main advantage is a much lower CPU load.
 
 ## Supporting environments
 

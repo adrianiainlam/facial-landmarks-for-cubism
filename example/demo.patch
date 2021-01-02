@@ -1,6 +1,6 @@
 diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
---- ./demo_clean/CMakeLists.txt	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/CMakeLists.txt	2020-07-11 22:52:49.099117981 +0100
+--- ./demo_clean/CMakeLists.txt	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/CMakeLists.txt	2020-10-02 02:10:49.198928000 +0100
 @@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
  # Set app name.
  set(APP_NAME Demo)
@@ -61,8 +61,8 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  #
  # * USE_RENDER_TARGET
 diff -pruN --exclude build ./demo_clean/scripts/make_gcc ./demo_dev/scripts/make_gcc
---- ./demo_clean/scripts/make_gcc	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/scripts/make_gcc	2020-07-14 15:33:09.865020790 +0100
+--- ./demo_clean/scripts/make_gcc	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/scripts/make_gcc	2020-10-02 02:10:49.198928000 +0100
 @@ -9,5 +9,6 @@ BUILD_PATH=$SCRIPT_PATH/../build/make_gc
  # Run CMake.
  cmake -S "$CMAKE_PATH" \
@@ -73,8 +73,8 @@ diff -pruN --exclude build ./demo_clean/scripts/make_gcc ./demo_dev/scripts/make
 +  -D USE_AVX_INSTRUCTIONS=1
 +cd "$BUILD_PATH" && make -j4
 diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeLists.txt
---- ./demo_clean/src/CMakeLists.txt	2020-09-27 17:43:12.081477263 +0100
-+++ ./demo_dev/src/CMakeLists.txt	2020-07-11 17:39:18.358435702 +0100
+--- ./demo_clean/src/CMakeLists.txt	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/CMakeLists.txt	2020-10-02 02:10:49.198928000 +0100
 @@ -19,6 +19,4 @@ target_sources(${APP_NAME}
      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.hpp
@@ -83,8 +83,8 @@ diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeL
 -    ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.hpp
  )
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LAppDelegate.cpp
---- ./demo_clean/src/LAppDelegate.cpp	2020-09-27 17:43:12.081477263 +0100
-+++ ./demo_dev/src/LAppDelegate.cpp	2020-07-11 17:35:02.414902548 +0100
+--- ./demo_clean/src/LAppDelegate.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppDelegate.cpp	2020-10-02 02:10:49.198928000 +0100
 @@ -45,7 +45,8 @@ void LAppDelegate::ReleaseInstance()
      s_instance = NULL;
  }
@@ -213,8 +213,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
  
  Csm::csmVector<string> LAppDelegate::Split(const std::string& baseString, char delimiter)
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LAppDelegate.hpp
---- ./demo_clean/src/LAppDelegate.hpp	2020-09-27 17:43:12.081477263 +0100
-+++ ./demo_dev/src/LAppDelegate.hpp	2020-07-11 17:34:40.778602504 +0100
+--- ./demo_clean/src/LAppDelegate.hpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppDelegate.hpp	2020-10-02 02:10:49.198928000 +0100
 @@ -40,7 +40,8 @@ public:
      /**
      * @brief   APPに必要なものを初期化する。
@@ -289,8 +289,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
 -
 -};
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src/LAppLive2DManager.cpp
---- ./demo_clean/src/LAppLive2DManager.cpp	2020-09-27 17:43:12.081477263 +0100
-+++ ./demo_dev/src/LAppLive2DManager.cpp	2020-07-11 23:20:11.548419176 +0100
+--- ./demo_clean/src/LAppLive2DManager.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppLive2DManager.cpp	2021-01-02 12:03:47.315569210 +0000
 @@ -52,9 +52,10 @@ void LAppLive2DManager::ReleaseInstance(
  
  LAppLive2DManager::LAppLive2DManager()
@@ -342,7 +342,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  
      if (_viewMatrix != NULL)
      {
-@@ -148,26 +131,10 @@ void LAppLive2DManager::OnUpdate() const
+@@ -148,30 +131,14 @@ void LAppLive2DManager::OnUpdate() const
      }
  }
  
@@ -353,7 +353,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 -}
 -
 -void LAppLive2DManager::ChangeScene(Csm::csmInt32 index)
-+void LAppLive2DManager::SetModel(std::string modelName)
++void LAppLive2DManager::SetModel(std::string modelName, bool useOldParamId)
  {
 -    _sceneIndex = index;
 -    if (DebugLogEnable)
@@ -372,6 +372,20 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
      modelJsonName += ".model3.json";
  
      ReleaseAllModel();
+-    _models.PushBack(new LAppModel());
++    _models.PushBack(new LAppModel(useOldParamId));
+     _models[0]->LoadAssets(modelPath.c_str(), modelJsonName.c_str());
+ 
+     /*
+@@ -193,7 +160,7 @@ void LAppLive2DManager::ChangeScene(Csm:
+ 
+ #if defined(USE_RENDER_TARGET) || defined(USE_MODEL_RENDER_TARGET)
+         // モデル個別にαを付けるサンプルとして、もう1体モデルを作成し、少し位置をずらす
+-        _models.PushBack(new LAppModel());
++        _models.PushBack(new LAppModel(useOldParamId));
+         _models[1]->LoadAssets(modelPath.c_str(), modelJsonName.c_str());
+         _models[1]->GetModelMatrix()->TranslateX(0.2f);
+ #endif
 @@ -215,3 +182,20 @@ csmUint32 LAppLive2DManager::GetModelNum
  {
      return _models.GetSize();
@@ -394,8 +408,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 +    _translateY = translateY;
 +}
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src/LAppLive2DManager.hpp
---- ./demo_clean/src/LAppLive2DManager.hpp	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/src/LAppLive2DManager.hpp	2020-07-11 23:21:17.969484538 +0100
+--- ./demo_clean/src/LAppLive2DManager.hpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppLive2DManager.hpp	2021-01-02 12:04:05.551573634 +0000
 @@ -6,12 +6,15 @@
   */
  #pragma once
@@ -412,7 +426,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
  /**
  * @brief サンプルアプリケーションにおいてCubismModelを管理するクラス<br>
  *         モデル生成と破棄、タップイベントの処理、モデル切り替えを行う。
-@@ -72,16 +75,12 @@ public:
+@@ -72,16 +75,14 @@ public:
      void OnUpdate() const;
  
      /**
@@ -430,12 +444,14 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
 +     *
 +     * @param[in] modelName : Name of model, should be the same for both
 +     *                        the directory and the model3.json file
++     * @param[in] useOldParamId : If true, translate new (Cubism 3+)
++     *                            parameter IDs to old (Cubism 2.1) ones
 +     */
-+    void SetModel(std::string modelName);
++    void SetModel(std::string modelName, bool useOldParamId);
  
      /**
       * @brief   モデル個数を得る
-@@ -89,6 +88,24 @@ public:
+@@ -89,6 +90,24 @@ public:
       */
      Csm::csmUint32 GetModelNum() const;
  
@@ -460,7 +476,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
  private:
      /**
      * @brief  コンストラクタ
-@@ -102,5 +119,8 @@ private:
+@@ -102,5 +121,8 @@ private:
  
      Csm::CubismMatrix44*        _viewMatrix; ///< モデル描画に用いるView行列
      Csm::csmVector<LAppModel*>  _models; ///< モデルインスタンスのコンテナ
@@ -471,8 +487,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
 +    float _translateY;
  };
 diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppModel.cpp
---- ./demo_clean/src/LAppModel.cpp	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/src/LAppModel.cpp	2020-09-27 17:40:16.401166244 +0100
+--- ./demo_clean/src/LAppModel.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppModel.cpp	2021-01-02 12:07:31.408109737 +0000
 @@ -21,6 +21,8 @@
  #include "LAppTextureManager.hpp"
  #include "LAppDelegate.hpp"
@@ -482,7 +498,39 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  using namespace Live2D::Cubism::Framework;
  using namespace Live2D::Cubism::Framework::DefaultParameterId;
  using namespace LAppDefine;
-@@ -128,30 +130,6 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -45,22 +47,24 @@ namespace {
+     }
+ }
+ 
+-LAppModel::LAppModel()
++LAppModel::LAppModel(bool useOldParamId)
+     : CubismUserModel()
+     , _modelSetting(NULL)
+     , _userTimeSeconds(0.0f)
++    , _detector(nullptr)
++    , _useOldParamId(useOldParamId)
+ {
+     if (DebugLogEnable)
+     {
+         _debugMode = true;
+     }
+ 
+-    _idParamAngleX = CubismFramework::GetIdManager()->GetId(ParamAngleX);
+-    _idParamAngleY = CubismFramework::GetIdManager()->GetId(ParamAngleY);
+-    _idParamAngleZ = CubismFramework::GetIdManager()->GetId(ParamAngleZ);
+-    _idParamBodyAngleX = CubismFramework::GetIdManager()->GetId(ParamBodyAngleX);
+-    _idParamEyeBallX = CubismFramework::GetIdManager()->GetId(ParamEyeBallX);
+-    _idParamEyeBallY = CubismFramework::GetIdManager()->GetId(ParamEyeBallY);
++    _idParamAngleX = CubismFramework::GetIdManager()->GetId(_(ParamAngleX));
++    _idParamAngleY = CubismFramework::GetIdManager()->GetId(_(ParamAngleY));
++    _idParamAngleZ = CubismFramework::GetIdManager()->GetId(_(ParamAngleZ));
++    _idParamBodyAngleX = CubismFramework::GetIdManager()->GetId(_(ParamBodyAngleX));
++    _idParamEyeBallX = CubismFramework::GetIdManager()->GetId(_(ParamEyeBallX));
++    _idParamEyeBallY = CubismFramework::GetIdManager()->GetId(_(ParamEyeBallY));
+ }
+ 
+ LAppModel::~LAppModel()
+@@ -128,30 +132,6 @@ void LAppModel::SetupModel(ICubismModelS
          DeleteBuffer(buffer, path.GetRawString());
      }
  
@@ -513,7 +561,16 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Physics
      if (strcmp(_modelSetting->GetPhysicsFileName(), "") != 0)
      {
-@@ -214,15 +192,6 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -190,7 +170,7 @@ void LAppModel::SetupModel(ICubismModelS
+         breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
+         breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
+         breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamBodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
+-        breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(ParamBreath), 0.5f, 0.5f, 3.2345f, 0.5f));
++        breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(_(ParamBreath)), 0.5f, 0.5f, 3.2345f, 0.5f));
+ 
+         _breath->SetParameters(breathParameters);
+     }
+@@ -214,15 +194,6 @@ void LAppModel::SetupModel(ICubismModelS
          }
      }
  
@@ -529,7 +586,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Layout
      csmMap<csmString, csmFloat32> layout;
      _modelSetting->GetLayoutMap(layout);
-@@ -335,59 +304,57 @@ void LAppModel::Update()
+@@ -335,59 +306,57 @@ void LAppModel::Update()
      const csmFloat32 deltaTimeSeconds = LAppPal::GetDeltaTime();
      _userTimeSeconds += deltaTimeSeconds;
  
@@ -606,24 +663,24 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 +        }
 +        else
 +        {
-+            _model->SetParameterValue(idMan->GetId("ParamEyeLOpen"),
++            _model->SetParameterValue(idMan->GetId(_("ParamEyeLOpen")),
 +                                      params.leftEyeOpenness);
-+            _model->SetParameterValue(idMan->GetId("ParamEyeROpen"),
++            _model->SetParameterValue(idMan->GetId(_("ParamEyeROpen")),
 +                                      params.rightEyeOpenness);
 +        }
-+        _model->SetParameterValue(idMan->GetId("ParamMouthForm"),
++        _model->SetParameterValue(idMan->GetId(_("ParamMouthForm")),
 +                                  params.mouthForm);
-+        _model->SetParameterValue(idMan->GetId("ParamMouthOpenY"),
++        _model->SetParameterValue(idMan->GetId(_("ParamMouthOpenY")),
 +                                  params.mouthOpenness);
-+        _model->SetParameterValue(idMan->GetId("ParamEyeLSmile"),
++        _model->SetParameterValue(idMan->GetId(_("ParamEyeLSmile")),
 +                                  params.leftEyeSmile);
-+        _model->SetParameterValue(idMan->GetId("ParamEyeRSmile"),
++        _model->SetParameterValue(idMan->GetId(_("ParamEyeRSmile")),
 +                                  params.rightEyeSmile);
-+        _model->SetParameterValue(idMan->GetId("ParamAngleX"),
++        _model->SetParameterValue(idMan->GetId(_("ParamAngleX")),
 +                                  params.faceXAngle);
-+        _model->SetParameterValue(idMan->GetId("ParamAngleY"),
++        _model->SetParameterValue(idMan->GetId(_("ParamAngleY")),
 +                                  params.faceYAngle);
-+        _model->SetParameterValue(idMan->GetId("ParamAngleZ"),
++        _model->SetParameterValue(idMan->GetId(_("ParamAngleZ")),
 +                                  params.faceZAngle);
 +        if (params.autoBreath && _breath)
 +        {
@@ -634,7 +691,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      // 物理演算の設定
-@@ -396,17 +363,6 @@ void LAppModel::Update()
+@@ -396,17 +365,6 @@ void LAppModel::Update()
          _physics->Evaluate(_model, deltaTimeSeconds);
      }
  
@@ -652,7 +709,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      // ポーズの設定
      if (_pose != NULL)
      {
-@@ -626,3 +582,9 @@ Csm::Rendering::CubismOffscreenFrame_Ope
+@@ -626,3 +584,37 @@ Csm::Rendering::CubismOffscreenFrame_Ope
  {
      return _renderBuffer;
  }
@@ -662,9 +719,37 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 +    _detector = detector;
 +}
 +
++Csm::csmString LAppModel::_(std::string s)
++{
++    std::string ans;
++    if (_useOldParamId)
++    {
++        if (s == "ParamTere")
++        {
++            ans = "PARAM_CHEEK";
++        }
++        else
++        {
++            for (size_t i = 0; i < s.size(); i++)
++            {
++                if (std::isupper(s[i]) && i != 0)
++                {
++                    ans += '_';
++                }
++                ans += std::toupper(s[i]);
++            }
++        }
++    }
++    else
++    {
++        ans = s;
++    }
++    return csmString(ans.c_str());
++}
++
 diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppModel.hpp
---- ./demo_clean/src/LAppModel.hpp	2020-09-27 17:43:12.081477263 +0100
-+++ ./demo_dev/src/LAppModel.hpp	2020-07-11 15:40:18.977286166 +0100
+--- ./demo_clean/src/LAppModel.hpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppModel.hpp	2021-01-02 12:04:43.079607236 +0000
 @@ -13,6 +13,7 @@
  #include <Type/csmRectF.hpp>
  #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
@@ -673,7 +758,20 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  
  /**
   * @brief ユーザーが実際に使用するモデルの実装クラス<br>
-@@ -113,6 +114,13 @@ public:
+@@ -24,8 +25,11 @@ class LAppModel : public Csm::CubismUser
+ public:
+     /**
+      * @brief コンストラクタ
++     *
++     * @param[in] useOldParamId : If true, translate new (Cubism 3+)
++     *                            parameter IDs to old (Cubism 2.1)  ones
+      */
+-    LAppModel();
++    LAppModel(bool useOldParamId);
+ 
+     /**
+      * @brief デストラクタ
+@@ -113,6 +117,13 @@ public:
       */
      Csm::Rendering::CubismOffscreenFrame_OpenGLES2& GetRenderBuffer();
  
@@ -687,7 +785,25 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  protected:
      /**
       *  @brief  モデルを描画する処理。モデルを描画する空間のView-Projection行列を渡す。
-@@ -183,6 +191,8 @@ private:
+@@ -166,6 +177,17 @@ private:
+     */
+     void ReleaseExpressions();
+ 
++    /**
++     * @brief Translate new (Cubism 3+) parameter IDs to old (Cubism 2.1) ones
++     *
++     * @param[in] s : New parameter ID
++     *
++     * @return Old parameter ID
++     */
++    Csm::csmString _(std::string s);
++
++    bool _useOldParamId;
++
+     Csm::ICubismModelSetting* _modelSetting; ///< モデルセッティング情報
+     Csm::csmString _modelHomeDir; ///< モデルセッティングが置かれたディレクトリ
+     Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
+@@ -183,6 +205,8 @@ private:
      const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
  
      Csm::Rendering::CubismOffscreenFrame_OpenGLES2 _renderBuffer;   ///< フレームバッファ以外の描画先
@@ -697,8 +813,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  
  
 diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.cpp
---- ./demo_clean/src/LAppPal.cpp	2020-09-27 17:43:12.081477263 +0100
-+++ ./demo_dev/src/LAppPal.cpp	2020-07-11 23:29:09.084910139 +0100
+--- ./demo_clean/src/LAppPal.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppPal.cpp	2020-10-02 02:10:49.202928000 +0100
 @@ -6,6 +6,7 @@
   */
  
@@ -720,8 +836,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
      }
      file.read(buf, size);
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/src/LAppTextureManager.cpp
---- ./demo_clean/src/LAppTextureManager.cpp	2020-09-27 17:43:12.085477268 +0100
-+++ ./demo_dev/src/LAppTextureManager.cpp	2020-07-11 22:22:18.004965003 +0100
+--- ./demo_clean/src/LAppTextureManager.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppTextureManager.cpp	2020-10-02 02:10:49.202928000 +0100
 @@ -96,6 +96,46 @@ LAppTextureManager::TextureInfo* LAppTex
  
  }
@@ -770,8 +886,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
  {
      for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/src/LAppTextureManager.hpp
---- ./demo_clean/src/LAppTextureManager.hpp	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/src/LAppTextureManager.hpp	2020-07-11 17:36:31.180131039 +0100
+--- ./demo_clean/src/LAppTextureManager.hpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppTextureManager.hpp	2020-10-02 02:10:49.202928000 +0100
 @@ -72,6 +72,8 @@ public:
      */
      TextureInfo* CreateTextureFromPngFile(std::string fileName);
@@ -782,8 +898,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/sr
      * @brief 画像の解放
      *
 diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView.cpp
---- ./demo_clean/src/LAppView.cpp	2020-09-27 17:43:12.085477268 +0100
-+++ ./demo_dev/src/LAppView.cpp	2020-07-11 17:38:06.905451955 +0100
+--- ./demo_clean/src/LAppView.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppView.cpp	2020-10-02 02:10:49.202928000 +0100
 @@ -13,7 +13,6 @@
  #include "LAppLive2DManager.hpp"
  #include "LAppTextureManager.hpp"
@@ -959,8 +1075,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -    }
  }
 diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView.hpp
---- ./demo_clean/src/LAppView.hpp	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/src/LAppView.hpp	2020-07-11 17:38:25.541708705 +0100
+--- ./demo_clean/src/LAppView.hpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/LAppView.hpp	2020-10-02 02:10:49.202928000 +0100
 @@ -14,7 +14,6 @@
  #include "CubismFramework.hpp"
  #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
@@ -1015,9 +1131,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
      // レンダリング先を別ターゲットにする方式の場合に使用
      LAppSprite* _renderSprite;                                  ///< モードによっては_renderBufferのテクスチャを描画
 diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
---- ./demo_clean/src/main.cpp	2020-09-27 17:43:12.069477246 +0100
-+++ ./demo_dev/src/main.cpp	2020-07-12 15:06:29.194034887 +0100
-@@ -5,18 +5,156 @@
+--- ./demo_clean/src/main.cpp	2020-01-30 05:45:00.000000000 +0000
++++ ./demo_dev/src/main.cpp	2021-01-02 12:08:38.440444044 +0000
+@@ -5,18 +5,162 @@
   * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
   */
  
@@ -1048,6 +1164,7 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +    float translateX;
 +    float translateY;
 +    std::string modelName;
++    bool oldId; // If true, translate new (Cubism 3+) parameter IDs to old (Cubism 2.1) IDs
 +    std::string cfgPath; // Path to config file for FacialLandmarkDetector
 +};
 +
@@ -1064,6 +1181,7 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +    cmdArgs.translateX = 0.0f;
 +    cmdArgs.translateY = -2.8f;
 +    cmdArgs.modelName = "Haru";
++    cmdArgs.oldId = false;
 +    cmdArgs.cfgPath = "";
 +
 +    int i = 1;
@@ -1128,6 +1246,10 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +        {
 +            cmdArgs.cfgPath = argv[i + 1];
 +        }
++        else if (arg == "--old-param-id" || arg == "-o")
++        {
++            cmdArgs.oldId = (argv[i + 1][0] == '1');
++        }
 +        else
 +        {
 +            throw std::runtime_error("Unrecognized argument: " + arg);
@@ -1164,7 +1286,7 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +                               &detector);
 +
 +    LAppLive2DManager *manager = LAppLive2DManager::GetInstance();
-+    manager->SetModel(cmdArgs.modelName);
++    manager->SetModel(cmdArgs.modelName, cmdArgs.oldId);
 +
 +    manager->SetProjectionScaleTranslate(cmdArgs.scaleFactor,
 +                                         cmdArgs.translateX,

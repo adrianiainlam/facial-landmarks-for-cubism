@@ -122,6 +122,9 @@ for the Facial Landmarks for Cubism library.
  * `--translate-y`, `-y`: Vertical translation of the model within the window
  * `--model`, `-m`: Name of the model to be used. This must be located inside
    the "Resources" folder.
+ * `--old-param-id`, `-o`: If set to 1, translate new (Cubism 3+) parameter
+   IDs to old (Cubism 2.1) IDs. This is necessary, for example, for
+   [the Chitose model available from Live2D](https://www.live2d.com/en/download/sample-data/).
  * `--config`, `-c`: Path to the configuration file for the Facial Landmarks
    for Cubism library. See below for more details.
 

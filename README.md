@@ -51,9 +51,14 @@ performance.
    and the OpenCV library (I'm using version 4.3.0). To compile the example
    program you will also require the OpenGL library (and its dev headers)
    among other libraries required for the example program. The libraries I
-   had to install (this list may not be exhaustive) are:
+   had to install on Ubuntu 18.04 (this list may not be exhaustive) are:
 
        libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+
+   A Debian Bullseye user has [reported](https://github.com/adrianiainlam/facial-landmarks-for-cubism/issues/2)
+   the following extra requirements:
+
+       libopencv-dev libopenblas-dev liblapack-dev
 
 2. Clone this repository including its submodule (dlib)
 

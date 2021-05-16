@@ -27,10 +27,18 @@ SOFTWARE.
 
 #include <deque>
 #include <string>
-#include <opencv2/opencv.hpp>
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/image_processing.h>
-#include <dlib/gui_widgets.h>
+
+struct Point
+{
+    double x;
+    double y;
+
+    Point(double _x = 0, double _y = 0)
+    {
+        x = _x;
+        y = _y;
+    }
+};
 
 class FacialLandmarkDetector
 {
@@ -69,29 +77,25 @@ private:
         RIGHT
     };
 
-    cv::VideoCapture webcam;
-    dlib::image_window win;
-    dlib::frontal_face_detector detector;
-    dlib::shape_predictor predictor;
     bool m_stop;
 
-    double calcEyeAspectRatio(dlib::point& p1, dlib::point& p2,
-                              dlib::point& p3, dlib::point& p4,
-                              dlib::point& p5, dlib::point& p6) const;
+    double calcEyeAspectRatio(Point& p1, Point& p2,
+                              Point& p3, Point& p4,
+                              Point& p5, Point& p6) const;
 
-    double calcRightEyeAspectRatio(dlib::full_object_detection& shape) const;
-    double calcLeftEyeAspectRatio(dlib::full_object_detection& shape) const;
+    double calcRightEyeAspectRatio(Point landmarks[]) const;
+    double calcLeftEyeAspectRatio(Point landmarks[]) const;
 
     double calcEyeOpenness(LeftRight eye,
-                           dlib::full_object_detection& shape,
+                           Point landmarks[],
                            double faceYAngle) const;
 
-    double calcMouthForm(dlib::full_object_detection& shape) const;
-    double calcMouthOpenness(dlib::full_object_detection& shape, double mouthForm) const;
+    double calcMouthForm(Point landmarks[]) const;
+    double calcMouthOpenness(Point landmarks[], double mouthForm) const;
 
-    double calcFaceXAngle(dlib::full_object_detection& shape) const;
-    double calcFaceYAngle(dlib::full_object_detection& shape, double faceXAngle, double mouthForm) const;
-    double calcFaceZAngle(dlib::full_object_detection& shape) const;
+    double calcFaceXAngle(Point landmarks[]) const;
+    double calcFaceYAngle(Point landmarks[], double faceXAngle, double mouthForm) const;
+    double calcFaceZAngle(Point landmarks[]) const;
 
     void populateDefaultConfig(void);
     void parseConfig(std::string cfgPath);
@@ -111,14 +115,10 @@ private:
 
     struct Config
     {
-        int cvVideoCaptureId;
-        std::string predictorPath;
         double faceYAngleCorrection;
         double eyeSmileEyeOpenThreshold;
         double eyeSmileMouthFormThreshold;
         double eyeSmileMouthOpenThreshold;
-        bool showWebcamVideo;
-        bool renderLandmarksOnVideo;
         bool lateralInversion;
         std::size_t faceXAngleNumTaps;
         std::size_t faceYAngleNumTaps;
@@ -127,7 +127,6 @@ private:
         std::size_t mouthOpenNumTaps;
         std::size_t leftEyeOpenNumTaps;
         std::size_t rightEyeOpenNumTaps;
-        int cvWaitKeyMs;
         double eyeClosedThreshold;
         double eyeOpenThreshold;
         double mouthNormalThreshold;

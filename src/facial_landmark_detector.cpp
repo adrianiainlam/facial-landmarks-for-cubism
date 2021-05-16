@@ -26,13 +26,6 @@ SOFTWARE.
 #include <sstream>
 #include <cmath>
 
-#include <opencv2/opencv.hpp>
-
-#include <dlib/opencv.h>
-#include <dlib/image_processing/frontal_face_detector.h>
-#include <dlib/image_processing.h>
-#include <dlib/image_processing/render_face_detections.h>
-
 #include "facial_landmark_detector.h"
 #include "math_utils.h"
 
@@ -52,13 +45,7 @@ FacialLandmarkDetector::FacialLandmarkDetector(std::string cfgPath)
 {
     parseConfig(cfgPath);
 
-    if (!webcam.open(m_cfg.cvVideoCaptureId))
-    {
-        throw std::runtime_error("Unable to open webcam");
-    }
-
-    detector = dlib::get_frontal_face_detector();
-    dlib::deserialize(m_cfg.predictorPath) >> predictor;
+    // TODO setup UDP connection here?
 }
 
 FacialLandmarkDetector::Params FacialLandmarkDetector::getParams(void) const
@@ -127,92 +114,57 @@ void FacialLandmarkDetector::mainLoop(void)
 {
     while (!m_stop)
     {
-        cv::Mat frame;
-        if (!webcam.read(frame))
-        {
-            throw std::runtime_error("Unable to read from webcam");
-        }
-        cv::Mat flipped;
         if (m_cfg.lateralInversion)
         {
-            cv::flip(frame, flipped, 1);
-        }
-        else
-        {
-            flipped = frame;
-        }
-        dlib::cv_image<dlib::bgr_pixel> cimg(flipped);
-
-        if (m_cfg.showWebcamVideo)
-        {
-            win.set_image(cimg);
+            // TODO is it something we can do here? Or in OSF only?
         }
 
-        std::vector<dlib::rectangle> faces = detector(cimg);
+        // TODO get the array of landmark coordinates here
+        Point landmarks[68];
 
-        if (faces.size() > 0)
-        {
-            dlib::rectangle face = faces[0];
-            dlib::full_object_detection shape = predictor(cimg, face);
 
-            /* The coordinates seem to be rather noisy in general.
-             * We will push everything through some moving average filters
-             * to reduce noise. The number of taps is determined empirically
-             * until we get something good.
-             * An alternative method would be to get some better dataset
-             * for dlib - perhaps even to train on a custom data set just for the user.
-             */
+        /* The coordinates seem to be rather noisy in general.
+         * We will push everything through some moving average filters
+         * to reduce noise. The number of taps is determined empirically
+         * until we get something good.
+         * An alternative method would be to get some better dataset -
+         * perhaps even to train on a custom data set just for the user.
+         */
 
-            // Face rotation: X direction (left-right)
-            double faceXRot = calcFaceXAngle(shape);
-            filterPush(m_faceXAngle, faceXRot, m_cfg.faceXAngleNumTaps);
+        // Face rotation: X direction (left-right)
+        double faceXRot = calcFaceXAngle(landmarks);
+        filterPush(m_faceXAngle, faceXRot, m_cfg.faceXAngleNumTaps);
 
-            // Mouth form (smile / laugh) detection
-            double mouthForm = calcMouthForm(shape);
-            filterPush(m_mouthForm, mouthForm, m_cfg.mouthFormNumTaps);
+        // Mouth form (smile / laugh) detection
+        double mouthForm = calcMouthForm(landmarks);
+        filterPush(m_mouthForm, mouthForm, m_cfg.mouthFormNumTaps);
 
-            // Face rotation: Y direction (up-down)
-            double faceYRot = calcFaceYAngle(shape, faceXRot, mouthForm);
-            filterPush(m_faceYAngle, faceYRot, m_cfg.faceYAngleNumTaps);
+        // Face rotation: Y direction (up-down)
+        double faceYRot = calcFaceYAngle(landmarks, faceXRot, mouthForm);
+        filterPush(m_faceYAngle, faceYRot, m_cfg.faceYAngleNumTaps);
 
-            // Face rotation: Z direction (head tilt)
-            double faceZRot = calcFaceZAngle(shape);
-            filterPush(m_faceZAngle, faceZRot, m_cfg.faceZAngleNumTaps);
+        // Face rotation: Z direction (head tilt)
+        double faceZRot = calcFaceZAngle(landmarks);
+        filterPush(m_faceZAngle, faceZRot, m_cfg.faceZAngleNumTaps);
 
-            // Mouth openness
-            double mouthOpen = calcMouthOpenness(shape, mouthForm);
-            filterPush(m_mouthOpenness, mouthOpen, m_cfg.mouthOpenNumTaps);
+        // Mouth openness
+        double mouthOpen = calcMouthOpenness(landmarks, mouthForm);
+        filterPush(m_mouthOpenness, mouthOpen, m_cfg.mouthOpenNumTaps);
 
-            // Eye openness
-            double eyeLeftOpen = calcEyeOpenness(LEFT, shape, faceYRot);
-            filterPush(m_leftEyeOpenness, eyeLeftOpen, m_cfg.leftEyeOpenNumTaps);
-            double eyeRightOpen = calcEyeOpenness(RIGHT, shape, faceYRot);
-            filterPush(m_rightEyeOpenness, eyeRightOpen, m_cfg.rightEyeOpenNumTaps);
+        // Eye openness
+        double eyeLeftOpen = calcEyeOpenness(LEFT, landmarks, faceYRot);
+        filterPush(m_leftEyeOpenness, eyeLeftOpen, m_cfg.leftEyeOpenNumTaps);
+        double eyeRightOpen = calcEyeOpenness(RIGHT, landmarks, faceYRot);
+        filterPush(m_rightEyeOpenness, eyeRightOpen, m_cfg.rightEyeOpenNumTaps);
 
-            // TODO eyebrows?
-
-            if (m_cfg.showWebcamVideo && m_cfg.renderLandmarksOnVideo)
-            {
-                win.clear_overlay();
-                win.add_overlay(dlib::render_face_detections(shape));
-            }
-        }
-        else
-        {
-            if (m_cfg.showWebcamVideo && m_cfg.renderLandmarksOnVideo)
-            {
-                win.clear_overlay();
-            }
-        }
-
-        cv::waitKey(m_cfg.cvWaitKeyMs);
+        // TODO eyebrows?
     }
 }
 
 double FacialLandmarkDetector::calcEyeAspectRatio(
-    dlib::point& p1, dlib::point& p2,
-    dlib::point& p3, dlib::point& p4,
-    dlib::point& p5, dlib::point& p6) const
+    Point& p1, Point& p2,
+    Point& p3, Point& p4,
+    Point& p5, Point& p6) const
 {
     double eyeWidth = dist(p1, p4);
     double eyeHeight1 = dist(p2, p6);
@@ -223,19 +175,19 @@ double FacialLandmarkDetector::calcEyeAspectRatio(
 
 double FacialLandmarkDetector::calcEyeOpenness(
     LeftRight eye,
-    dlib::full_object_detection& shape,
+    Point landmarks[],
     double faceYAngle) const
 {
     double eyeAspectRatio;
     if (eye == LEFT)
     {
-        eyeAspectRatio = calcEyeAspectRatio(shape.part(42), shape.part(43), shape.part(44),
-                                            shape.part(45), shape.part(46), shape.part(47));
+        eyeAspectRatio = calcEyeAspectRatio(landmarks[42], landmarks[43], landmarks[44],
+                                            landmarks[45], landmarks[46], landmarks[47]);
     }
     else
     {
-        eyeAspectRatio = calcEyeAspectRatio(shape.part(36), shape.part(37), shape.part(38),
-                                            shape.part(39), shape.part(40), shape.part(41));
+        eyeAspectRatio = calcEyeAspectRatio(landmarks[36], landmarks[37], landmarks[38],
+                                            landmarks[39], landmarks[40], landmarks[41]);
     }
 
     // Apply correction due to faceYAngle
@@ -246,7 +198,7 @@ double FacialLandmarkDetector::calcEyeOpenness(
 
 
 
-double FacialLandmarkDetector::calcMouthForm(dlib::full_object_detection& shape) const
+double FacialLandmarkDetector::calcMouthForm(Point landmarks[]) const
 {
     /* Mouth form parameter: 0 for normal mouth, 1 for fully smiling / laughing.
      * Compare distance between the two corners of the mouth
@@ -260,12 +212,12 @@ double FacialLandmarkDetector::calcMouthForm(dlib::full_object_detection& shape)
      * the angle changes. So here we'll use the distance approach instead.
      */
 
-    auto eye1 = centroid(shape.part(36), shape.part(37), shape.part(38),
-                         shape.part(39), shape.part(40), shape.part(41));
-    auto eye2 = centroid(shape.part(42), shape.part(43), shape.part(44),
-                         shape.part(45), shape.part(46), shape.part(47));
+    auto eye1 = centroid(landmarks[36], landmarks[37], landmarks[38],
+                         landmarks[39], landmarks[40], landmarks[41]);
+    auto eye2 = centroid(landmarks[42], landmarks[43], landmarks[44],
+                         landmarks[45], landmarks[46], landmarks[47]);
     double distEyes = dist(eye1, eye2);
-    double distMouth = dist(shape.part(48), shape.part(54));
+    double distMouth = dist(landmarks[58], landmarks[62]);
 
     double form = linearScale01(distMouth / distEyes,
                                 m_cfg.mouthNormalThreshold,
@@ -275,21 +227,21 @@ double FacialLandmarkDetector::calcMouthForm(dlib::full_object_detection& shape)
 }
 
 double FacialLandmarkDetector::calcMouthOpenness(
-    dlib::full_object_detection& shape,
+    Point landmarks[],
     double mouthForm) const
 {
     // Use points for the bottom of the upper lip, and top of the lower lip
     // We have 3 pairs of points available, which give the mouth height
     // on the left, in the middle, and on the right, resp.
     // First let's try to use an average of all three.
-    double heightLeft = dist(shape.part(63), shape.part(65));
-    double heightMiddle = dist(shape.part(62), shape.part(66));
-    double heightRight = dist(shape.part(61), shape.part(67));
+    double heightLeft   = dist(landmarks[61], landmarks[63]);
+    double heightMiddle = dist(landmarks[60], landmarks[64]);
+    double heightRight  = dist(landmarks[59], landmarks[65]);
 
     double avgHeight = (heightLeft + heightMiddle + heightRight) / 3;
 
     // Now, normalize it with the width of the mouth.
-    double width = dist(shape.part(60), shape.part(64));
+    double width = dist(landmarks[58], landmarks[62]);
 
     double normalized = avgHeight / width;
 
@@ -305,24 +257,24 @@ double FacialLandmarkDetector::calcMouthOpenness(
     return scaled;
 }
 
-double FacialLandmarkDetector::calcFaceXAngle(dlib::full_object_detection& shape) const
+double FacialLandmarkDetector::calcFaceXAngle(Point landmarks[]) const
 {
     // This function will be easier to understand if you refer to the
     // diagram in faceXAngle.png
 
     // Construct the y-axis using (1) average of four points on the nose and
-    // (2) average of four points on the upper lip.
+    // (2) average of five points on the upper lip.
 
-    auto y0 = centroid(shape.part(27), shape.part(28), shape.part(29),
-                       shape.part(30));
-    auto y1 = centroid(shape.part(50), shape.part(51), shape.part(52),
-                       shape.part(62));
+    auto y0 = centroid(landmarks[27], landmarks[28], landmarks[29],
+                       landmarks[30]);
+    auto y1 = centroid(landmarks[48], landmarks[49], landmarks[50],
+                       landmarks[51], landmarks[52]);
 
     // Now drop a perpedicular from the left and right edges of the face,
     // and calculate the ratio between the lengths of these perpendiculars
 
-    auto left = centroid(shape.part(14), shape.part(15), shape.part(16));
-    auto right = centroid(shape.part(0), shape.part(1), shape.part(2));
+    auto left = centroid(landmarks[14], landmarks[15], landmarks[16]);
+    auto right = centroid(landmarks[0], landmarks[1], landmarks[2]);
 
     // Constructing a perpendicular:
     // Join the left/right point and the upper lip. The included angle
@@ -349,13 +301,13 @@ double FacialLandmarkDetector::calcFaceXAngle(dlib::full_object_detection& shape
     return theta;
 }
 
-double FacialLandmarkDetector::calcFaceYAngle(dlib::full_object_detection& shape, double faceXAngle, double mouthForm) const
+double FacialLandmarkDetector::calcFaceYAngle(Point landmarks[], double faceXAngle, double mouthForm) const
 {
     // Use the nose
     // angle between the two left/right points and the tip
-    double c = dist(shape.part(31), shape.part(35));
-    double a = dist(shape.part(30), shape.part(31));
-    double b = dist(shape.part(30), shape.part(35));
+    double c = dist(landmarks[31], landmarks[35]);
+    double a = dist(landmarks[30], landmarks[31]);
+    double b = dist(landmarks[30], landmarks[35]);
 
     double angle = solveCosineRuleAngle(c, a, b);
 
@@ -387,25 +339,25 @@ double FacialLandmarkDetector::calcFaceYAngle(dlib::full_object_detection& shape
     }
 }
 
-double FacialLandmarkDetector::calcFaceZAngle(dlib::full_object_detection& shape) const
+double FacialLandmarkDetector::calcFaceZAngle(Point landmarks[]) const
 {
     // Use average of eyes and nose
 
-    auto eyeRight = centroid(shape.part(36), shape.part(37), shape.part(38),
-                             shape.part(39), shape.part(40), shape.part(41));
-    auto eyeLeft = centroid(shape.part(42), shape.part(43), shape.part(44),
-                            shape.part(45), shape.part(46), shape.part(47));
+    auto eyeRight = centroid(landmarks[36], landmarks[37], landmarks[38],
+                             landmarks[39], landmarks[40], landmarks[41]);
+    auto eyeLeft  = centroid(landmarks[42], landmarks[43], landmarks[44],
+                             landmarks[45], landmarks[46], landmarks[47]);
 
-    auto noseLeft = shape.part(35);
-    auto noseRight = shape.part(31);
+    auto noseLeft  = landmarks[35];
+    auto noseRight = landmarks[31];
 
-    double eyeYDiff = eyeRight.y() - eyeLeft.y();
-    double eyeXDiff = eyeRight.x() - eyeLeft.x();
+    double eyeYDiff = eyeRight.y - eyeLeft.y;
+    double eyeXDiff = eyeRight.x - eyeLeft.x;
 
     double angle1 = std::atan(eyeYDiff / eyeXDiff);
 
-    double noseYDiff = noseRight.y() - noseLeft.y();
-    double noseXDiff = noseRight.x() - noseLeft.x();
+    double noseYDiff = noseRight.y - noseLeft.y;
+    double noseXDiff = noseRight.x - noseLeft.x;
 
     double angle2 = std::atan(noseYDiff / noseXDiff);
 
@@ -440,23 +392,7 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
             std::string paramName;
             if (ss >> paramName)
             {
-                if (paramName == "cvVideoCaptureId")
-                {
-                    if (!(ss >> m_cfg.cvVideoCaptureId))
-                    {
-                        throwConfigError(paramName, "int",
-                                         line, lineNum);
-                    }
-                }
-                else if (paramName == "predictorPath")
-                {
-                    if (!(ss >> m_cfg.predictorPath))
-                    {
-                        throwConfigError(paramName, "std::string",
-                                         line, lineNum);
-                    }
-                }
-                else if (paramName == "faceYAngleCorrection")
+                if (paramName == "faceYAngleCorrection")
                 {
                     if (!(ss >> m_cfg.faceYAngleCorrection))
                     {
@@ -485,22 +421,6 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
                     if (!(ss >> m_cfg.eyeSmileMouthOpenThreshold))
                     {
                         throwConfigError(paramName, "double",
-                                         line, lineNum);
-                    }
-                }
-                else if (paramName == "showWebcamVideo")
-                {
-                    if (!(ss >> m_cfg.showWebcamVideo))
-                    {
-                        throwConfigError(paramName, "bool",
-                                         line, lineNum);
-                    }
-                }
-                else if (paramName == "renderLandmarksOnVideo")
-                {
-                    if (!(ss >> m_cfg.renderLandmarksOnVideo))
-                    {
-                        throwConfigError(paramName, "bool",
                                          line, lineNum);
                     }
                 }
@@ -565,14 +485,6 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
                     if (!(ss >> m_cfg.rightEyeOpenNumTaps))
                     {
                         throwConfigError(paramName, "std::size_t",
-                                         line, lineNum);
-                    }
-                }
-                else if (paramName == "cvWaitKeyMs")
-                {
-                    if (!(ss >> m_cfg.cvWaitKeyMs))
-                    {
-                        throwConfigError(paramName, "int",
                                          line, lineNum);
                     }
                 }
@@ -713,16 +625,11 @@ void FacialLandmarkDetector::populateDefaultConfig(void)
     // These are values that I've personally tested to work OK for my face.
     // Your milage may vary - hence the config file.
 
-    m_cfg.cvVideoCaptureId = 0;
-    m_cfg.predictorPath = "shape_predictor_68_face_landmarks.dat";
     m_cfg.faceYAngleCorrection = 10;
     m_cfg.eyeSmileEyeOpenThreshold = 0.6;
     m_cfg.eyeSmileMouthFormThreshold = 0.75;
     m_cfg.eyeSmileMouthOpenThreshold = 0.5;
-    m_cfg.showWebcamVideo = true;
-    m_cfg.renderLandmarksOnVideo = true;
     m_cfg.lateralInversion = true;
-    m_cfg.cvWaitKeyMs = 5;
     m_cfg.faceXAngleNumTaps = 11;
     m_cfg.faceYAngleNumTaps = 11;
     m_cfg.faceZAngleNumTaps = 11;

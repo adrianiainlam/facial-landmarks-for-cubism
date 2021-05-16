@@ -27,7 +27,6 @@ SOFTWARE.
 
 #include <cmath>
 #include <initializer_list>
-#include <dlib/image_processing.h>
 
 static const double PI = 3.14159265358979;
 
@@ -47,20 +46,21 @@ static double avg(T container, double defaultValue = 0)
     return sum / container.size();
 }
 
+
 template<class... Args>
-static dlib::point centroid(Args&... args)
+static Point centroid(Args&... args)
 {
     std::size_t numArgs = sizeof...(args);
-    if (numArgs == 0) return dlib::point(0, 0);
+    if (numArgs == 0) return Point(0, 0);
 
     double sumX = 0, sumY = 0;
     for (auto point : {args...})
     {
-        sumX += point.x();
-        sumY += point.y();
+        sumX += point.x;
+        sumY += point.y;
     }
 
-    return dlib::point(sumX / numArgs, sumY / numArgs);
+    return Point(sumX / numArgs, sumY / numArgs);
 }
 
 static inline double sq(double x)
@@ -88,10 +88,10 @@ static inline double degToRad(double deg)
     return deg * PI / 180;
 }
 
-double dist(dlib::point& p1, dlib::point& p2)
+double dist(Point& p1, Point& p2)
 {
-    double xDist = p1.x() - p2.x();
-    double yDist = p1.y() - p2.y();
+    double xDist = p1.x - p2.x;
+    double yDist = p1.y - p2.y;
 
     return std::hypot(xDist, yDist);
 }

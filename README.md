@@ -43,12 +43,8 @@ if you don't have C++17 support.
 
 ## Build instructions
 
-1. Download OpenSeeFace from <https://github.com/emilianavt/OpenSeeFace>,
+1. Clone OpenSeeFace from <https://github.com/emilianavt/OpenSeeFace>,
    refer to its documentation and install its dependencies.
-
-   Note: I have forked OSF and added a small feature (flipping the webcam
-   feed horizontally like a mirror). If you want, you can clone my fork
-   instead: <https://github.com/adrianiainlam/OpenSeeFace>.
 
 2. Install dependencies.
 
@@ -96,8 +92,6 @@ To build the example program:
    OpenSeeFace, and run
 
        ./python3 ./facetracker.py -v 4 --model 3 -M
-
-   The `-M` option is currently available only on my OSF fork.
 
    I tried models 3 and 4, and I think both work reasonably well.
    Please feel free to explore other options provided by OSF.

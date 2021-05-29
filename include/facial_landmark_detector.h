@@ -1,10 +1,10 @@
 // -*- mode: c++ -*-
 
-#ifndef __FACIAL_LANDMARK_DETECTOR_H__
-#define __FACIAL_LANDMARK_DETECTOR_H__
+#ifndef FACIAL_LANDMARK_DETECTOR_H
+#define FACIAL_LANDMARK_DETECTOR_H
 
 /****
-Copyright (c) 2020 Adrian I. Lam
+Copyright (c) 2020-2021 Adrian I. Lam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -58,11 +58,12 @@ public:
         bool autoBreath;
         bool randomMotion;
         // TODO eyebrows currently not supported...
-        // I'd like to include them, but the dlib detection is very
+        // I'd like to include them, but the dlib / OSF detection is very
         // noisy and inaccurate (at least for my face).
     };
 
     FacialLandmarkDetector(std::string cfgPath);
+    ~FacialLandmarkDetector();
 
     Params getParams(void) const;
 
@@ -71,6 +72,9 @@ public:
     void mainLoop(void);
 
 private:
+    FacialLandmarkDetector(const FacialLandmarkDetector&) = delete;
+    FacialLandmarkDetector& operator=(const FacialLandmarkDetector &) = delete;
+
     enum LeftRight : bool
     {
         LEFT,
@@ -78,6 +82,9 @@ private:
     };
 
     bool m_stop;
+
+    int m_sock;
+    static const int m_faceId = 0; // Only support one face for now
 
     double calcEyeAspectRatio(Point& p1, Point& p2,
                               Point& p3, Point& p4,
@@ -115,11 +122,12 @@ private:
 
     struct Config
     {
+        std::string osfIpAddress;
+        int osfPort;
         double faceYAngleCorrection;
         double eyeSmileEyeOpenThreshold;
         double eyeSmileMouthFormThreshold;
         double eyeSmileMouthOpenThreshold;
-        bool lateralInversion;
         std::size_t faceXAngleNumTaps;
         std::size_t faceYAngleNumTaps;
         std::size_t faceZAngleNumTaps;
@@ -139,6 +147,7 @@ private:
         double faceYAngleZeroValue;
         double faceYAngleUpThreshold;
         double faceYAngleDownThreshold;
+        bool winkEnable;
         bool autoBlink;
         bool autoBreath;
         bool randomMotion;

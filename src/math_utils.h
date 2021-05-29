@@ -1,10 +1,10 @@
 // -*- mode: c++ -*-
 
-#ifndef __FACE_DETECTOR_MATH_UTILS_H__
-#define __FACE_DETECTOR_MATH_UTILS_H__
+#ifndef FACE_DETECTOR_MATH_UTILS_H
+#define FACE_DETECTOR_MATH_UTILS_H
 
 /****
-Copyright (c) 2020 Adrian I. Lam
+Copyright (c) 2020-2021 Adrian I. Lam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

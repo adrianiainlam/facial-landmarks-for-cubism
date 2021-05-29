@@ -8,15 +8,16 @@
 # very first character of the line, i.e. without any preceeding whitespace.
 
 
+## Section 0: OpenSeeFace connection parameters
+osfIpAddress 127.0.0.1
+osfPort 11573
+
 ## Section 1: Cubism params calculation control
 #
 # These values control how the facial landmarks are translated into
 # parameters that control the Cubism model, and will vary from person
 # to person. The following values seem to work OK for my face, but
 # your milage may vary.
-
-# If 1, laterally invert the image (create a mirror image); if 0, don't invert
-lateralInversion 1
 
 # Section 1.0: Live2D automatic functionality
 # Set 1 to enable, 0 to disable.
@@ -60,16 +61,13 @@ faceYAngleSmileCorrection 0.075
 
 # Section 1.2: Eye control
 # This is mainly calculated based on the eye aspect ratio (eye height
-# divided by eye width). Note that currently an average of the values
-# of both eyes is applied - mainly due to two reasons: (1) the dlib
-# dataset I'm using fails to detect winks for me, and (2) if this is
-# not done, I frequently get asynchronous blinks which just looks ugly.
+# divided by eye width).
 
 # Maximum eye aspect ratio when the eye is closed
-eyeClosedThreshold 0.2
+eyeClosedThreshold 0.18
 
 # Minimum eye aspect ratio when the eye is open
-eyeOpenThreshold 0.25
+eyeOpenThreshold 0.21
 
 # Max eye aspect ratio to switch to a closed "smiley eye"
 eyeSmileEyeOpenThreshold 0.6
@@ -81,6 +79,13 @@ eyeSmileMouthFormThreshold 0.75
 # Min "mouth open" value to switch to a closed "smiley eye"
 # "Mouth open" is 1 when fully open, and 0 when closed
 eyeSmileMouthOpenThreshold 0.5
+
+# Enable winks (experimental)
+# Winks may or may not work well on your face, depending on the dataset.
+# If all you get is ugly asynchronous blinks, consider setting this to
+# zero instead.
+# Also, this seems to not work very well when wearing glasses.
+winkEnable 1
 
 
 # Section 1.3: Mouth control
@@ -118,9 +123,9 @@ mouthOpenLaughCorrection 0.2
 # but it will also cause more lag between your movement and the movement
 # of the avatar, and quick movements (e.g. blinks) may be completely missed.
 
-faceXAngleNumTaps 11
-faceYAngleNumTaps 11
-faceZAngleNumTaps 11
+faceXAngleNumTaps 7
+faceYAngleNumTaps 7
+faceZAngleNumTaps 7
 mouthFormNumTaps 3
 mouthOpenNumTaps 3
 leftEyeOpenNumTaps 3

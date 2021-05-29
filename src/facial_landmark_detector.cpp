@@ -1,5 +1,5 @@
 /****
-Copyright (c) 2020 Adrian I. Lam
+Copyright (c) 2020-2021 Adrian I. Lam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,12 @@ SOFTWARE.
 #include <sstream>
 #include <cmath>
 
+#include <cinttypes>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
 #include "facial_landmark_detector.h"
 #include "math_utils.h"
 
@@ -45,7 +51,27 @@ FacialLandmarkDetector::FacialLandmarkDetector(std::string cfgPath)
 {
     parseConfig(cfgPath);
 
-    // TODO setup UDP connection here?
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(m_cfg.osfPort);
+    addr.sin_addr.s_addr = inet_addr(m_cfg.osfIpAddress.c_str());
+
+    m_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (m_sock < 0)
+    {
+        throw std::runtime_error("Cannot create UDP socket");
+    }
+
+    int ret = bind(m_sock, (struct sockaddr *)&addr, sizeof addr);
+    if (ret != 0)
+    {
+        throw std::runtime_error("Cannot bind socket");
+    }
+}
+
+FacialLandmarkDetector::~FacialLandmarkDetector()
+{
+    close(m_sock);
 }
 
 FacialLandmarkDetector::Params FacialLandmarkDetector::getParams(void) const
@@ -61,26 +87,34 @@ FacialLandmarkDetector::Params FacialLandmarkDetector::getParams(void) const
 
     double leftEye = avg(m_leftEyeOpenness, 1);
     double rightEye = avg(m_rightEyeOpenness, 1);
-    // Just combine the two to get better synchronized blinks
-    // This effectively disables winks, so if we want to
-    // support winks in the future (see below) we will need
-    // a better way to handle this out-of-sync blinks.
-    double bothEyes = (leftEye + rightEye) / 2;
-    leftEye = bothEyes;
-    rightEye = bothEyes;
-    // Detect winks and make them look better
-    // Commenting out - winks are difficult to be detected by the
-    // dlib data set anyway... maybe in the future we can
-    // add a runtime option to enable/disable...
-    /*if (right == 0 && left > 0.2)
+    bool sync = !m_cfg.winkEnable;
+
+    if (m_cfg.winkEnable)
     {
-        left = 1;
+        if (rightEye < 0.1 && leftEye > 0.2)
+        {
+            leftEye = 1;
+            rightEye = 0;
+        }
+        else if (leftEye < 0.1 && rightEye > 0.2)
+        {
+            leftEye = 0;
+            rightEye = 1;
+        }
+        else
+        {
+            sync = true;
+        }
     }
-    else if (left == 0 && right > 0.2)
+
+    if (sync)
     {
-        right = 1;
+        // Combine the two to get better synchronized blinks
+        double bothEyes = (leftEye + rightEye) / 2;
+        leftEye = bothEyes;
+        rightEye = bothEyes;
     }
-    */
+
     params.leftEyeOpenness = leftEye;
     params.rightEyeOpenness = rightEye;
 
@@ -114,14 +148,34 @@ void FacialLandmarkDetector::mainLoop(void)
 {
     while (!m_stop)
     {
-        if (m_cfg.lateralInversion)
+        // Read UDP packet from OSF
+        static const int nPoints = 68;
+        static const int packetFrameSize = 8 + 4 + 2 * 4 + 2 * 4 + 1 + 4 + 3 * 4 + 3 * 4
+                                         + 4 * 4 + 4 * 68 + 4 * 2 * 68 + 4 * 3 * 70 + 4 * 14;
+
+        static const int landmarksOffset = 8 + 4 + 2 * 4 + 2 * 4 + 1 + 4 + 3 * 4 + 3 * 4
+                                         + 4 * 4 + 4 * 68;
+
+        uint8_t buf[packetFrameSize];
+        ssize_t recvSize = recv(m_sock, buf, sizeof buf, 0);
+
+        if (recvSize != packetFrameSize) continue;
+        // Note: This is dependent on endianness, and we would assume that
+        // the OSF instance is run on a machine with the same endianness
+        // as our current machine.
+        int recvFaceId = *(int *)(buf + 8);
+        if (recvFaceId != m_faceId) continue; // We only support one face
+
+        Point landmarks[nPoints];
+
+        for (int i = 0; i < nPoints; i++)
         {
-            // TODO is it something we can do here? Or in OSF only?
+            float x = *(float *)(buf + landmarksOffset + i * 2 * sizeof(float));
+            float y = *(float *)(buf + landmarksOffset + (i * 2 + 1) * sizeof(float));
+
+            landmarks[i].x = x;
+            landmarks[i].y = y;
         }
-
-        // TODO get the array of landmark coordinates here
-        Point landmarks[68];
-
 
         /* The coordinates seem to be rather noisy in general.
          * We will push everything through some moving average filters
@@ -157,7 +211,8 @@ void FacialLandmarkDetector::mainLoop(void)
         double eyeRightOpen = calcEyeOpenness(RIGHT, landmarks, faceYRot);
         filterPush(m_rightEyeOpenness, eyeRightOpen, m_cfg.rightEyeOpenNumTaps);
 
-        // TODO eyebrows?
+        // Eyebrows: the landmark detection doesn't work very well for my face,
+        // so I've not implemented them.
     }
 }
 
@@ -392,7 +447,23 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
             std::string paramName;
             if (ss >> paramName)
             {
-                if (paramName == "faceYAngleCorrection")
+                if (paramName == "osfIpAddress")
+                {
+                    if (!(ss >> m_cfg.osfIpAddress))
+                    {
+                        throwConfigError(paramName, "std::string",
+                                         line, lineNum);
+                    }
+                }
+                else if (paramName == "osfPort")
+                {
+                    if (!(ss >> m_cfg.osfPort))
+                    {
+                        throwConfigError(paramName, "int",
+                                         line, lineNum);
+                    }
+                }
+                else if (paramName == "faceYAngleCorrection")
                 {
                     if (!(ss >> m_cfg.faceYAngleCorrection))
                     {
@@ -421,14 +492,6 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
                     if (!(ss >> m_cfg.eyeSmileMouthOpenThreshold))
                     {
                         throwConfigError(paramName, "double",
-                                         line, lineNum);
-                    }
-                }
-                else if (paramName == "lateralInversion")
-                {
-                    if (!(ss >> m_cfg.lateralInversion))
-                    {
-                        throwConfigError(paramName, "bool",
                                          line, lineNum);
                     }
                 }
@@ -501,6 +564,14 @@ void FacialLandmarkDetector::parseConfig(std::string cfgPath)
                     if (!(ss >> m_cfg.eyeOpenThreshold))
                     {
                         throwConfigError(paramName, "double",
+                                         line, lineNum);
+                    }
+                }
+                else if (paramName == "winkEnable")
+                {
+                    if (!(ss >> m_cfg.winkEnable))
+                    {
+                        throwConfigError(paramName, "bool",
                                          line, lineNum);
                     }
                 }
@@ -629,16 +700,16 @@ void FacialLandmarkDetector::populateDefaultConfig(void)
     m_cfg.eyeSmileEyeOpenThreshold = 0.6;
     m_cfg.eyeSmileMouthFormThreshold = 0.75;
     m_cfg.eyeSmileMouthOpenThreshold = 0.5;
-    m_cfg.lateralInversion = true;
-    m_cfg.faceXAngleNumTaps = 11;
-    m_cfg.faceYAngleNumTaps = 11;
-    m_cfg.faceZAngleNumTaps = 11;
+    m_cfg.faceXAngleNumTaps = 7;
+    m_cfg.faceYAngleNumTaps = 7;
+    m_cfg.faceZAngleNumTaps = 7;
     m_cfg.mouthFormNumTaps = 3;
     m_cfg.mouthOpenNumTaps = 3;
     m_cfg.leftEyeOpenNumTaps = 3;
     m_cfg.rightEyeOpenNumTaps = 3;
-    m_cfg.eyeClosedThreshold = 0.2;
-    m_cfg.eyeOpenThreshold = 0.25;
+    m_cfg.eyeClosedThreshold = 0.18;
+    m_cfg.eyeOpenThreshold = 0.21;
+    m_cfg.winkEnable = true;
     m_cfg.mouthNormalThreshold = 0.75;
     m_cfg.mouthSmileThreshold = 1.0;
     m_cfg.mouthClosedThreshold = 0.1;

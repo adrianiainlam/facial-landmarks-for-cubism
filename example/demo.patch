@@ -44,15 +44,12 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  add_custom_command(
 diff -pruN --exclude build ./demo_clean/scripts/make_gcc ./demo_dev/scripts/make_gcc
 --- ./demo_clean/scripts/make_gcc	2021-02-17 01:23:17.000000000 +0000
-+++ ./demo_dev/scripts/make_gcc	2021-04-28 11:49:43.166296000 +0100
-@@ -9,5 +9,6 @@ BUILD_PATH=$SCRIPT_PATH/../build/make_gc
- # Run CMake.
++++ ./demo_dev/scripts/make_gcc	2021-05-29 02:04:17.338257917 +0100
+@@ -10,4 +10,4 @@ BUILD_PATH=$SCRIPT_PATH/../build/make_gc
  cmake -S "$CMAKE_PATH" \
    -B "$BUILD_PATH" \
--  -D CMAKE_BUILD_TYPE=Release
+   -D CMAKE_BUILD_TYPE=Release
 -cd "$BUILD_PATH" && make
-+  -D CMAKE_BUILD_TYPE=Release \
-+  -D USE_AVX_INSTRUCTIONS=1
 +cd "$BUILD_PATH" && make -j4
 diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeLists.txt
 --- ./demo_clean/src/CMakeLists.txt	2021-02-17 01:23:17.000000000 +0000

@@ -1,6 +1,6 @@
 # Facial Landmarks for Cubism
 
-A library that extracts facial landmarks from a webcam feed and converts them
+A library that extracts facial landmarks from a webcam feed (computed by [OpenSeeFace](https://github.com/emilianavt/OpenSeeFace)) and converts them
 into Live2D® Cubism SDK parameters.
 
 *Disclaimer: This library is designed for use with the Live2D® Cubism SDK.
@@ -15,6 +15,10 @@ This block diagram shows the intended usage of this library:
 Video showing me using the example program:
 <https://youtu.be/SZPEKwEqbdI>
 
+## Old version using dlib
+The old version using dlib is no longer actively maintained, but if
+you want to use it, you can get it on the [dlib-stable branch](https://github.com/adrianiainlam/facial-landmarks-for-cubism/tree/dlib-stable).
+
 ## Spin-off: Mouse Tracking for Cubism
 
 An alternative version using mouse cursor tracking and audio based lip
@@ -26,66 +30,48 @@ The main advantage is a much lower CPU load.
 ## Supporting environments
 
 This library was developed and tested only on Ubuntu 18.04 using GCC 7.5.0.
-However I don't think I've used anything that prevents it from being
-cross-platform compatible -- it should still work as long as you have a
-recent C/C++ compiler. The library should only require C++11. The Cubism
+
+Currently it only supports Unix-like environments, as I am using
+`<sys/socket.h>` etc to communicate with OpenSeeFace. If there is demand
+for it, I can try to make it work on Windows as well (contributions
+welcome).
+
+The library should only require C++11. The Cubism
 SDK requires C++14. I have made use of one C++17 library (`<filesystem>`)
 in the example program, but it should be straightforward to change this
 if you don't have C++17 support.
 
-I have provided some shell scripts for convenience when building. In an
-environment without a `/bin/sh` shell you may have to run the commands
-manually. Hereafter, all build instructions will assume a Linux environment
-where a shell is available.
-
-If your CPU does not support AVX instructions you may want to edit "build.sh"
-and "example/demo.patch" to remove the `-D USE_AVX_INSTRUCTIONS=1` variable
-(or change AVX to SSE4 or SSE2). However there could be a penalty in
-performance.
-
 ## Build instructions
 
-1. Install dependencies.
+1. Download OpenSeeFace from <https://github.com/emilianavt/OpenSeeFace>,
+   refer to its documentation and install its dependencies.
 
-   You will require a recent C/C++ compiler, `make`, `patch`, CMake >= 3.16,
-   and the OpenCV library (I'm using version 4.3.0). To compile the example
+   Note: I have forked OSF and added a small feature (flipping the webcam
+   feed horizontally like a mirror). If you want, you can clone my fork
+   instead: <https://github.com/adrianiainlam/OpenSeeFace>.
+
+2. Install dependencies.
+
+   You will require a recent C/C++ compiler, `make`, `patch`, and CMake >= 3.16. To compile the example
    program you will also require the OpenGL library (and its dev headers)
    among other libraries required for the example program. The libraries I
    had to install on Ubuntu 18.04 (this list may not be exhaustive) are:
 
        libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
 
-   A Debian Bullseye user has [reported](https://github.com/adrianiainlam/facial-landmarks-for-cubism/issues/2)
-   the following extra requirements:
+3. Clone this repository
 
-       libopencv-dev libopenblas-dev liblapack-dev
+       git clone https://github.com/adrianiainlam/facial-landmarks-for-cubism.git
 
-2. Clone this repository including its submodule (dlib)
-
-       git clone --recurse-submodules https://github.com/adrianiainlam/facial-landmarks-for-cubism.git
-
-3. To build the library only: (Skip this step if you want to build the example
+4. To build the library only: (Skip this step if you want to build the example
    program. It will be done automatically.)
 
        cd <path of the git repo>
        ./build.sh
 
-4. You will require a facial landmark dataset to use with dlib. I have
-   downloaded mine from
-   <http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2>.
-   Extract the file and edit the "config.txt" file to point to the
-   path to this file.
-
-   Note: The license for this dataset excludes commercial use. If you want
-   to use this library in a commercial product you will need to obtain a
-   dataset in some other way.
-
 To build the example program:
 
-5. Copy the extracted dlib dataset from step 4 to the "example" folder
-   of this repo.
-
-6. Download "Cubism 4 SDK for Native R2" from the Live2D website:
+5. Download "Cubism 4 SDK for Native R2" from the Live2D website:
    <https://www.live2d.com/en/download/cubism-sdk/download-native/>.
 
    Extract the archive -- put the "CubismSdkForNative-4-r.2" folder under
@@ -94,17 +80,29 @@ To build the example program:
    Note: The Cubism SDK is the property of Live2D and is not part of this
    project. You must agree to Live2D's license agreements to use it.
 
-7. Go into the
+6. Go into the
    "example/CubismSdkForNative-4-r.2/Samples/OpenGL/thirdParty/scripts"
    directory and run
 
        ./setup_glew_glfw
 
-8. Go back to the "example" directory and run
+7. Go back to the "example" directory and run
 
        ./build.sh
 
-9. Now try running the example program. From the "example" directory:
+8. Now try running the example program.
+
+   First, (in a separate terminal) go to where you have downloaded
+   OpenSeeFace, and run
+
+       ./python3 ./facetracker.py -v 4 --model 3 -M
+
+   The `-M` option is currently available only on my OSF fork.
+
+   I tried models 3 and 4, and I think both work reasonably well.
+   Please feel free to explore other options provided by OSF.
+
+   Back to the original terminal, from the "example" directory:
 
        cd ./demo_build/build/make_gcc/bin/Demo/
        ./Demo
@@ -144,20 +142,6 @@ the `-c` argument. If using the library directly, the path to this file
 should be passed to the constructor (or pass an empty string to use
 default values).
 
-## Troubleshooting
-
-1. Example program crashes with SIGILL (Illegal instruction).
-
-   Your CPU probably doesn't support AVX instructions which is used by dlib.
-   You can confirm this by running
-
-       grep avx /proc/cpuinfo
-
-   If this is the case, try to find out if your CPU supports SSE4 or SSE2,
-   then edit "build.sh" and "example/demo.patch" to change
-   `USE_AVX_INSTRUCTIONS=1` to `USE_SSE4_INSTRUCTIONS=1` or
-   `USE_SSE2_INSTRUCTIONS=1`.
-
 ## License
 
 The library itself is provided under the MIT license. By "the library itself"
@@ -171,10 +155,6 @@ I refer to the following files that I have provided under this repo:
 
 The license text can be found in LICENSE-MIT.txt, and also at the top of
 the .cpp and .h files.
-
-The library makes use of the dlib library, provided here as a Git
-submodule, which is used under the Boost Software License, version 1.0.
-The full license text can be found under lib/dlib/dlib/LICENSE.txt.
 
 The example program is a patched version of the sample program provided
 by Live2D (because there's really no point in reinventing the wheel),
@@ -198,12 +178,6 @@ In order to use example program, or in any other way use this library
 with the Live2D® Cubism SDK, you must agree to the license by Live2D Inc.
 Their licenses can be found here:
 <https://www.live2d.com/en/download/cubism-sdk/download-native/>.
-
-The library requires a facial landmark dataset, and the one provided by
-dlib (which is derived from a dataset owned by Imperial College London)
-has been used in development. The license for this dataset excludes
-commercial use. You must obtain an alternative dataset if you wish to
-use this library commercially.
 
 This is not a license requirement, but if you find my library useful,
 I'd love to hear from you! Send me an email at spam(at)adrianiainlam.tk --

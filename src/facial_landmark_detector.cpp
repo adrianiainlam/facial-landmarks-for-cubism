@@ -696,6 +696,8 @@ void FacialLandmarkDetector::populateDefaultConfig(void)
     // These are values that I've personally tested to work OK for my face.
     // Your milage may vary - hence the config file.
 
+    m_cfg.osfIpAddress = "127.0.0.1";
+    m_cfg.osfPort = 11573;
     m_cfg.faceYAngleCorrection = 10;
     m_cfg.eyeSmileEyeOpenThreshold = 0.6;
     m_cfg.eyeSmileMouthFormThreshold = 0.75;

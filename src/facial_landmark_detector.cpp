@@ -26,11 +26,18 @@ SOFTWARE.
 #include <sstream>
 #include <cmath>
 
+#include <cstdint>
 #include <cinttypes>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#ifdef _WIN32
+#   include <WinSock2.h>
+#   include <ws2tcpip.h>
+#   include <basetsd.h>
+#else
+#   include <sys/types.h>
+#   include <sys/socket.h>
+#   include <arpa/inet.h>
+#   include <unistd.h>
+#endif
 
 #include "facial_landmark_detector.h"
 #include "math_utils.h"
@@ -50,6 +57,14 @@ FacialLandmarkDetector::FacialLandmarkDetector(std::string cfgPath)
     : m_stop(false)
 {
     parseConfig(cfgPath);
+
+#ifdef _WIN32 // WinSock2 should be initialized before using
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        return;
+    }
+#endif
 
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
@@ -71,7 +86,11 @@ FacialLandmarkDetector::FacialLandmarkDetector(std::string cfgPath)
 
 FacialLandmarkDetector::~FacialLandmarkDetector()
 {
+#ifdef _WIN32
+    closesocket(m_sock);
+#else
     close(m_sock);
+#endif
 }
 
 FacialLandmarkDetector::Params FacialLandmarkDetector::getParams(void) const
@@ -156,8 +175,8 @@ void FacialLandmarkDetector::mainLoop(void)
         static const int landmarksOffset = 8 + 4 + 2 * 4 + 2 * 4 + 1 + 4 + 3 * 4 + 3 * 4
                                          + 4 * 4 + 4 * 68;
 
-        uint8_t buf[packetFrameSize];
-        ssize_t recvSize = recv(m_sock, buf, sizeof buf, 0);
+        char buf[packetFrameSize];
+        auto recvSize = recv(m_sock, buf, sizeof buf, 0);
 
         if (recvSize != packetFrameSize) continue;
         // Note: This is dependent on endianness, and we would assume that

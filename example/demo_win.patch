@@ -1,0 +1,2471 @@
+diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
+--- ./demo_clean/CMakeLists.txt	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/CMakeLists.txt	2023-03-05 23:22:10.756801200 +0000
+@@ -9,7 +9,7 @@ option(
+ # Set app name.
+ set(APP_NAME Demo)
+ # Set directory paths.
+-set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
++set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-4-r.6)
+ set(CORE_PATH ${SDK_ROOT_PATH}/Core)
+ set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/Framework)
+ set(THIRD_PARTY_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/thirdParty)
+@@ -41,7 +41,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE
+ set(BUILD_UTILS OFF CACHE BOOL "" FORCE)
+ 
+ # Specify version of compiler.
+-set(CMAKE_CXX_STANDARD 11)
++set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ set(CMAKE_CXX_EXTENSIONS OFF)
+ 
+@@ -113,6 +113,9 @@ target_link_libraries(Framework Live2DCu
+ # Find opengl libraries.
+ find_package(OpenGL REQUIRED)
+ 
++# Add FacialLandmarksForCubism
++add_subdirectory(../.. FacialLandmarksForCubism_build)
++
+ # Make executable app.
+ add_executable(${APP_NAME})
+ # Add source files.
+@@ -122,12 +125,14 @@ target_link_libraries(${APP_NAME}
+   Framework
+   glfw
+   ${OPENGL_LIBRARIES}
++  FacialLandmarksForCubism
++  ws2_32
+   # Solve the MSVCRT confliction.
+   debug -NODEFAULTLIB:libcmtd.lib
+   optimized -NODEFAULTLIB:libcmt.lib
+ )
+ # Specify include directories.
+-target_include_directories(${APP_NAME} PRIVATE ${STB_PATH})
++target_include_directories(${APP_NAME} PRIVATE ${STB_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+ # Build in multi-process.
+ target_compile_options(${APP_NAME} PRIVATE /MP)
+ 
+diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeLists.txt
+--- ./demo_clean/src/CMakeLists.txt	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/CMakeLists.txt	2023-03-05 23:22:10.976777100 +0000
+@@ -1,49 +1,22 @@
+-if (CSM_MINIMUM_DEMO)
+-  target_sources(${APP_NAME}
++target_sources(${APP_NAME}
+   PRIVATE
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.hpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.hpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.cpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.hpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppLive2DManager.cpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppLive2DManager.hpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppModel.cpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppModel.hpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppPal.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppPal.hpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppSprite.cpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppSprite.hpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.hpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/mainMinimum.cpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.cpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.hpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/CubismUserModelExtend.cpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/CubismUserModelExtend.hpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/CubismSampleViewMatrix.cpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/CubismSampleViewMatrix.hpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/MouseActionManager.cpp
+-    ${CMAKE_CURRENT_SOURCE_DIR}/MouseActionManager.hpp
+-  )
+-else ()
+-  target_sources(${APP_NAME}
+-    PRIVATE
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppWavFileHandler.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppWavFileHandler.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppLive2DManager.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppLive2DManager.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppModel.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppModel.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppPal.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppPal.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppSprite.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppSprite.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.hpp
+-  )
+-endif ()
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.cpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.hpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
++)
+diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev/src/CubismUserModelExtend.cpp
+--- ./demo_clean/src/CubismUserModelExtend.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/CubismUserModelExtend.cpp	2023-03-05 23:22:10.780128700 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -23,7 +23,7 @@
+ #include "CubismUserModelExtend.hpp"
+ 
+ using namespace Live2D::Cubism::Framework;
+-using namespace Live2D::Cubism::Framework::DefaultParameterId;
++using namespace DefaultParameterId;
+ using namespace LAppDefine;
+ 
+ namespace {
+@@ -74,34 +74,17 @@ CubismUserModelExtend::~CubismUserModelE
+     delete _textureManager;
+ }
+ 
+-std::string CubismUserModelExtend::MakeAssetPath(const std::string& assetFileName)
+-{
+-    return _currentModelDirectory + assetFileName;
+-}
+-
+-void CubismUserModelExtend::SetAssetDirectory(const std::string& path)
+-{
+-    _currentModelDirectory = path;
+-}
+-
+-void CubismUserModelExtend::LoadAsset(const std::string & fiileName, const std::function<void(Csm::csmByte*, Csm::csmSizeInt)>& afterLoadCallback)
++void CubismUserModelExtend::LoadAssets(const Csm::csmChar* fileName)
+ {
+-    Csm::csmSizeInt bufferSize = 0;
+-    Csm::csmByte* buffer = nullptr;
+-
+-    if (fiileName.empty())
+-    {
+-        return;
+-    }
+-
+-    // バッファの設定
+-    buffer = LAppPal::LoadFileAsBytes(MakeAssetPath(fiileName).c_str(), &bufferSize);
++    csmSizeInt size;
++    const csmString path = csmString(_currentModelDirectory.c_str()) + fileName;
+ 
+-    // コールバック関数の呼び出し
+-    afterLoadCallback(buffer, bufferSize);
++    csmByte* buffer = CreateBuffer(path.GetRawString(), &size);
++    _modelJson = new CubismModelSettingJson(buffer, size);
++    DeleteBuffer(buffer, path.GetRawString());
+ 
+-    // バッファの解放
+-    LAppPal::ReleaseBytes(buffer);
++    // モデルの生成
++    SetupModel();
+ }
+ 
+ void CubismUserModelExtend::SetupModel()
+@@ -109,40 +92,75 @@ void CubismUserModelExtend::SetupModel()
+     _updating = true;
+     _initialized = false;
+ 
+-    // モデルの設定データをJsonファイルから読み込み
+-    LoadAsset(_modelDirName + ".model3.json", [=](Csm::csmByte* buffer, Csm::csmSizeInt bufferSize) { _modelJson = new Csm::CubismModelSettingJson(buffer, bufferSize); });
+-    // モデルの設定データからモデルデータを読み込み
+-    LoadAsset(_modelJson->GetModelFileName(), [=](Csm::csmByte* buffer, Csm::csmSizeInt bufferSize) { LoadModel(buffer, bufferSize); });
++    csmByte* buffer;
++    csmSizeInt size;
++
++    //Cubism Model
++    if (strcmp(_modelJson->GetModelFileName(), ""))
++    {
++        csmString path = _modelJson->GetModelFileName();
++        path = csmString(_currentModelDirectory.c_str()) + path;
++
++        buffer = CreateBuffer(path.GetRawString(), &size);
++        LoadModel(buffer, size);
++        DeleteBuffer(buffer, path.GetRawString());
++    }
+ 
+     // 表情データの読み込み
+-    for (auto expressionIndex = 0; expressionIndex < _modelJson->GetExpressionCount(); ++expressionIndex)
++    if (_modelJson->GetExpressionCount() > 0)
+     {
+-        LoadAsset(_modelJson->GetExpressionFileName(expressionIndex), [=](Csm::csmByte* buffer, Csm::csmSizeInt bufferSize) {
+-            auto expressionName = _modelJson->GetExpressionName(expressionIndex);
+-            ACubismMotion* motion = LoadExpression(buffer, bufferSize, expressionName);
+-            if (_expressions[expressionName])
++        const csmInt32 count = _modelJson->GetExpressionCount();
++        for (csmInt32 i = 0; i < count; i++)
++        {
++            csmString name = _modelJson->GetExpressionName(i);
++            csmString path = _modelJson->GetExpressionFileName(i);
++            path = csmString(_currentModelDirectory.c_str()) + path;
++
++            buffer = CreateBuffer(path.GetRawString(), &size);
++            ACubismMotion* motion = LoadExpression(buffer, size, name.GetRawString());
++
++            if (_expressions[name])
+             {
+-                ACubismMotion::Delete(_expressions[expressionName]);
+-                _expressions[expressionName] = nullptr;
++                ACubismMotion::Delete(_expressions[name]);
++                _expressions[name] = nullptr;
+             }
+-            _expressions[expressionName] = motion;
+-        });
++            _expressions[name] = motion;
++
++            DeleteBuffer(buffer, path.GetRawString());
++        }
+     }
+ 
+     //ポーズデータの読み込み
+-    LoadAsset(_modelJson->GetPoseFileName(), [=](Csm::csmByte* buffer, Csm::csmSizeInt bufferSize) {
+-       LoadPose(buffer, bufferSize);
+-    });
++    if (strcmp(_modelJson->GetPoseFileName(), ""))
++    {
++        csmString path = _modelJson->GetPoseFileName();
++        path = csmString(_currentModelDirectory.c_str()) + path;
++
++        buffer = CreateBuffer(path.GetRawString(), &size);
++        LoadPose(buffer, size);
++        DeleteBuffer(buffer, path.GetRawString());
++    }
+ 
+     // 物理演算データの読み込み
+-    LoadAsset(_modelJson->GetPhysicsFileName(), [=](Csm::csmByte* buffer, Csm::csmSizeInt bufferSize) {
+-        LoadPhysics(buffer, bufferSize);
+-    });
++    if (strcmp(_modelJson->GetPhysicsFileName(), ""))
++    {
++        csmString path = _modelJson->GetPhysicsFileName();
++        path = csmString(_currentModelDirectory.c_str()) + path;
++
++        buffer = CreateBuffer(path.GetRawString(), &size);
++        LoadPhysics(buffer, size);
++        DeleteBuffer(buffer, path.GetRawString());
++    }
+ 
+     // モデルに付属するユーザーデータの読み込み
+-    LoadAsset(_modelJson->GetUserDataFile(), [=](Csm::csmByte* buffer, Csm::csmSizeInt bufferSize) {
+-        LoadUserData(buffer, bufferSize);
+-    });
++    if (strcmp(_modelJson->GetUserDataFile(), ""))
++    {
++        csmString path = _modelJson->GetUserDataFile();
++        path = csmString(_currentModelDirectory.c_str()) + path;
++        buffer = CreateBuffer(path.GetRawString(), &size);
++        LoadUserData(buffer, size);
++        DeleteBuffer(buffer, path.GetRawString());
++    }
+ 
+     // Layout
+     csmMap<csmString, csmFloat32> layout;
+@@ -345,16 +363,6 @@ void CubismUserModelExtend::ModelParamUp
+     _model->SaveParameters();
+     //-----------------------------------------------------------------
+ 
+-    // メインモーションの更新がないとき
+-    if (!motionUpdated)
+-    {
+-        if (_eyeBlink)
+-        {
+-            // まばたき
+-            _eyeBlink->UpdateParameters(_model, deltaTimeSeconds);
+-        }
+-    }
+-
+     if (_expressionManager)
+     {
+         // 表情でパラメータ更新（相対変化）
+@@ -377,12 +385,6 @@ void CubismUserModelExtend::ModelParamUp
+     _model->AddParameterValue(_idParamEyeBallX, _dragX); // -1から1の値を加える
+     _model->AddParameterValue(_idParamEyeBallY, _dragY);
+ 
+-    // 呼吸など
+-    if (_breath)
+-    {
+-        _breath->UpdateParameters(_model, deltaTimeSeconds);
+-    }
+-
+     // 物理演算の設定
+     if (_physics)
+     {
+diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev/src/CubismUserModelExtend.hpp
+--- ./demo_clean/src/CubismUserModelExtend.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/CubismUserModelExtend.hpp	2023-03-05 23:22:10.986750400 +0000
+@@ -27,17 +27,13 @@ class CubismUserModelExtend :
+ {
+ public:
+     CubismUserModelExtend(const std::string modelDirectoryName, const std::string _currentModelDirectory); ///< コンストラクタ
+-    virtual ~CubismUserModelExtend(); ///< デストラクタ
++    ~CubismUserModelExtend(); ///< デストラクタ
+ 
+     /**
+-    * @brief model3.jsonからモデルを生成する
+-    *
+-    * model3.jsonの記述に従ってモデル生成、モーション、物理演算などのコンポーネント生成を行う
+-    *
+-    * @param[in]   setting     ICubismModelSettingのインスタンス
++    * @brief model3.jsonが置かれたディレクトリとファイルパスからモデルを生成する
+     *
+     */
+-    void SetupModel();
++    void LoadAssets(const  Csm::csmChar* fileName);
+ 
+     /**
+     * @brief モデルの更新
+@@ -48,35 +44,24 @@ public:
+ 
+ private:
+     /**
+-    * @brief パスを作成
++    * @brief model3.jsonからモデルを生成する
+     *
+-    * アセットのパスを作成する
+-    */
+-    std::string MakeAssetPath(const std::string & assetFileName);
+-
+-    /**
+-    * @brief ディレクトリパスの設定
++    * model3.jsonの記述に従ってモデル生成、モーション、物理演算などのコンポーネント生成を行う
++    *
++    * @param[in]   setting     ICubismModelSettingのインスタンス
+     *
+-    * モデルのディレクトリパスを設定する
+     */
+-    void SetAssetDirectory(const std::string & path);
++    void SetupModel();
+ 
+     /**
+-    * @brief アセットのロードを行う
++    * @brief 引数で指定したモーションの再生を開始する
+     *
+-    * 指定されたファイル名からアセットのロードを行う
++    * @param[in] group                       モーショングループ名
++    * @param[in] no                          グループ内の番号
++    * @param[in] priority                    優先度
++    * @param[in] onFinishedMotionHandler     モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
++    * @return 開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」
+     */
+-    void LoadAsset(const std::string & fiileName, const std::function<void(Csm::csmByte*, Csm::csmSizeInt)>& afterLoadCallback);
+-
+-    /**
+-   * @brief 引数で指定したモーションの再生を開始する
+-   *
+-   * @param[in] group                       モーショングループ名
+-   * @param[in] no                          グループ内の番号
+-   * @param[in] priority                    優先度
+-   * @param[in] onFinishedMotionHandler     モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
+-   * @return 開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」
+-   */
+     Csm::CubismMotionQueueEntryHandle StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL);
+ 
+     /**
+diff -pruN --exclude build ./demo_clean/src/LAppAllocator.cpp ./demo_dev/src/LAppAllocator.cpp
+--- ./demo_clean/src/LAppAllocator.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppAllocator.cpp	2023-03-05 23:22:10.847976000 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -9,7 +9,7 @@
+ 
+ using namespace Csm;
+ 
+-void* LAppAllocator::Allocate(const csmSizeType  size)
++void* LAppAllocator::Allocate(const csmSizeType size)
+ {
+     return malloc(size);
+ }
+diff -pruN --exclude build ./demo_clean/src/LAppAllocator.hpp ./demo_dev/src/LAppAllocator.hpp
+--- ./demo_clean/src/LAppAllocator.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppAllocator.hpp	2023-03-05 23:22:10.953083600 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDefine.cpp
+--- ./demo_clean/src/LAppDefine.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppDefine.cpp	2023-03-05 23:22:10.995458800 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -20,7 +20,7 @@ namespace LAppDefine {
+     const csmFloat32 ViewLogicalLeft = -1.0f;
+     const csmFloat32 ViewLogicalRight = 1.0f;
+     const csmFloat32 ViewLogicalBottom = -1.0f;
+-    const csmFloat32 ViewLogicalTop = -1.0f;
++    const csmFloat32 ViewLogicalTop = 1.0f;
+ 
+     const csmFloat32 ViewLogicalMaxLeft = -2.0f;
+     const csmFloat32 ViewLogicalMaxRight = 2.0f;
+diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDefine.hpp
+--- ./demo_clean/src/LAppDefine.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppDefine.hpp	2023-03-05 23:22:10.947784100 +0000
+@@ -1,9 +1,10 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+  * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+  */
++
+ #pragma once
+ 
+ #include <CubismFramework.hpp>
+diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LAppDelegate.cpp
+--- ./demo_clean/src/LAppDelegate.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppDelegate.cpp	2023-03-05 23:22:10.975780100 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -7,6 +7,7 @@
+ 
+ #include "LAppDelegate.hpp"
+ #include <iostream>
++#include <sstream>
+ #include <GL/glew.h>
+ #include <GLFW/glfw3.h>
+ #include "LAppView.hpp"
+@@ -43,7 +44,8 @@ void LAppDelegate::ReleaseInstance()
+     s_instance = NULL;
+ }
+ 
+-bool LAppDelegate::Initialize()
++bool LAppDelegate::Initialize(int initWindowWidth, int initWindowHeight,
++                              const char *windowTitle)
+ {
+     if (DebugLogEnable)
+     {
+@@ -61,7 +63,13 @@ bool LAppDelegate::Initialize()
+     }
+ 
+     // Windowの生成_
+-    _window = glfwCreateWindow(RenderTargetWidth, RenderTargetHeight, "SAMPLE", NULL, NULL);
++    _window = glfwCreateWindow(
++        initWindowWidth ? initWindowWidth : RenderTargetWidth,
++        initWindowHeight ? initWindowHeight : RenderTargetHeight,
++        windowTitle ? windowTitle : "SAMPLE",
++        NULL,
++        NULL);
++
+     if (_window == NULL)
+     {
+         if (DebugLogEnable)
+@@ -93,10 +101,6 @@ bool LAppDelegate::Initialize()
+     glEnable(GL_BLEND);
+     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ 
+-    //コールバック関数の登録
+-    glfwSetMouseButtonCallback(_window, EventHandler::OnMouseCallBack);
+-    glfwSetCursorPosCallback(_window, EventHandler::OnMouseCallBack);
+-
+     // ウィンドウサイズ記憶
+     int width, height;
+     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
+@@ -106,9 +110,15 @@ bool LAppDelegate::Initialize()
+     //AppViewの初期化
+     _view->Initialize();
+ 
+-    // Cubism SDK の初期化
++    // Cubism3の初期化
+     InitializeCubism();
+ 
++    //load model
++    LAppLive2DManager::GetInstance();
++
++    //load sprite
++    _view->InitializeSprite();
++
+     return GL_TRUE;
+ }
+ 
+@@ -125,7 +135,7 @@ void LAppDelegate::Release()
+     // リソースを解放
+     LAppLive2DManager::ReleaseInstance();
+ 
+-    //Cubism SDK の解放
++    //Cubism3の解放
+     CubismFramework::Dispose();
+ }
+ 
+@@ -136,18 +146,13 @@ void LAppDelegate::Run()
+     {
+         int width, height;
+         glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
+-        if( (_windowWidth!=width || _windowHeight!=height) && width>0 && height>0)
++        if((_windowWidth!=width || _windowHeight!=height) && width>0 && height>0)
+         {
+-            //AppViewの初期化
+             _view->Initialize();
+-            // スプライトサイズを再設定
+             _view->ResizeSprite();
+-            // サイズを保存しておく
++
+             _windowWidth = width;
+             _windowHeight = height;
+-
+-            // ビューポート変更
+-            glViewport(0, 0, width, height);
+         }
+ 
+         // 時間更新
+@@ -183,6 +188,7 @@ LAppDelegate::LAppDelegate():
+     _windowWidth(0),
+     _windowHeight(0)
+ {
++    _rootDirectory = "";
+     _view = new LAppView();
+     _textureManager = new LAppTextureManager();
+ }
+@@ -202,58 +208,10 @@ void LAppDelegate::InitializeCubism()
+     //Initialize cubism
+     CubismFramework::Initialize();
+ 
+-    //load model
+-    LAppLive2DManager::GetInstance();
+-
+     //default proj
+     CubismMatrix44 projection;
+ 
+     LAppPal::UpdateTime();
+-
+-    _view->InitializeSprite();
+-}
+-
+-void LAppDelegate::OnMouseCallBack(GLFWwindow* window, int button, int action, int modify)
+-{
+-    if (_view == NULL)
+-    {
+-        return;
+-    }
+-    if (GLFW_MOUSE_BUTTON_LEFT != button)
+-    {
+-        return;
+-    }
+-
+-    if (GLFW_PRESS == action)
+-    {
+-        _captured = true;
+-        _view->OnTouchesBegan(_mouseX, _mouseY);
+-    }
+-    else if (GLFW_RELEASE == action)
+-    {
+-        if (_captured)
+-        {
+-            _captured = false;
+-            _view->OnTouchesEnded(_mouseX, _mouseY);
+-        }
+-    }
+-}
+-
+-void LAppDelegate::OnMouseCallBack(GLFWwindow* window, double x, double y)
+-{
+-    _mouseX = static_cast<float>(x);
+-    _mouseY = static_cast<float>(y);
+-
+-    if (!_captured)
+-    {
+-        return;
+-    }
+-    if (_view == NULL)
+-    {
+-        return;
+-    }
+-
+-    _view->OnTouchesMoved(_mouseX, _mouseY);
+ }
+ 
+ GLuint LAppDelegate::CreateShader()
+@@ -271,10 +229,6 @@ GLuint LAppDelegate::CreateShader()
+         "}";
+     glShaderSource(vertexShaderId, 1, &vertexShader, NULL);
+     glCompileShader(vertexShaderId);
+-    if(!CheckShader(vertexShaderId))
+-    {
+-        return 0;
+-    }
+ 
+     //フラグメントシェーダのコンパイル
+     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+@@ -288,10 +242,6 @@ GLuint LAppDelegate::CreateShader()
+         "}";
+     glShaderSource(fragmentShaderId, 1, &fragmentShader, NULL);
+     glCompileShader(fragmentShaderId);
+-    if (!CheckShader(fragmentShaderId))
+-    {
+-        return 0;
+-    }
+ 
+     //プログラムオブジェクトの作成
+     GLuint programId = glCreateProgram();
+@@ -306,25 +256,24 @@ GLuint LAppDelegate::CreateShader()
+     return programId;
+ }
+ 
+-bool LAppDelegate::CheckShader(GLuint shaderId)
++void LAppDelegate::SetRootDirectory(std::string rootDir)
+ {
+-    GLint status;
+-    GLint logLength;
+-    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logLength);
+-    if (logLength > 0)
+-    {
+-        GLchar* log = reinterpret_cast<GLchar*>(CSM_MALLOC(logLength));
+-        glGetShaderInfoLog(shaderId, logLength, &logLength, log);
+-        CubismLogError("Shader compile log: %s", log);
+-        CSM_FREE(log);
+-    }
++    this->_rootDirectory = rootDir + "/";
++}
++
++Csm::csmVector<string> LAppDelegate::Split(const std::string& baseString, char delimiter)
++{
++    Csm::csmVector<string> elems;
++    stringstream ss(baseString);
++    string item;
+ 
+-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
+-    if (status == GL_FALSE)
++    while(getline(ss, item, delimiter))
+     {
+-        glDeleteShader(shaderId);
+-        return false;
++        if(!item.empty())
++        {
++            elems.PushBack(item);
++        }
+     }
+ 
+-    return true;
++    return elems;
+ }
+diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LAppDelegate.hpp
+--- ./demo_clean/src/LAppDelegate.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppDelegate.hpp	2023-03-05 23:22:10.789104800 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -7,8 +7,10 @@
+ 
+ #pragma once
+ 
++#include <string>
+ #include <GL/glew.h>
+ #include <GLFW/glfw3.h>
++#include "Type/csmVector.hpp"
+ #include "LAppAllocator.hpp"
+ 
+ class LAppView;
+@@ -16,7 +18,7 @@ class LAppTextureManager;
+ 
+ /**
+ * @brief   アプリケーションクラス。
+-*   Cubism SDK の管理を行う。
++*   Cubism3の管理を行う。
+ */
+ class LAppDelegate
+ {
+@@ -38,7 +40,8 @@ public:
+     /**
+     * @brief   APPに必要なものを初期化する。
+     */
+-    bool Initialize();
++    bool Initialize(int initWindowWidth = 0, int initWindowHeight = 0,
++                    const char *windowTitle = "SAMPLE");
+ 
+     /**
+     * @brief   解放する。
+@@ -51,25 +54,6 @@ public:
+     void Run();
+ 
+     /**
+-    * @brief   OpenGL用 glfwSetMouseButtonCallback用関数。
+-    *
+-    * @param[in]       window            コールバックを呼んだWindow情報
+-    * @param[in]       button            ボタン種類
+-    * @param[in]       action            実行結果
+-    * @param[in]       modify
+-    */
+-    void OnMouseCallBack(GLFWwindow* window, int button, int action, int modify);
+-
+-    /**
+-    * @brief   OpenGL用 glfwSetCursorPosCallback用関数。
+-    *
+-    * @param[in]       window            コールバックを呼んだWindow情報
+-    * @param[in]       x                 x座標
+-    * @param[in]       y                 x座標
+-    */
+-    void OnMouseCallBack(GLFWwindow* window, double x, double y);
+-
+-    /**
+     * @brief シェーダーを登録する。
+     */
+     GLuint CreateShader();
+@@ -94,6 +78,21 @@ public:
+     */
+     void AppEnd() { _isEnd = true; }
+ 
++    /**
++     * @brief   ルートディレクトリを設定する。
++     *
++     * @param[in] rootDir : The root directory to set to.
++     */
++    void SetRootDirectory(std::string rootDir);
++
++    /**
++     * @brief   ルートディレクトリを取得する。
++     */
++    std::string GetRootDirectory(){ return _rootDirectory;}
++
++    /**
++     * @brief   テクスチャマネージャーを取得する。
++     */
+     LAppTextureManager* GetTextureManager() { return _textureManager; }
+ 
+ private:
+@@ -108,17 +107,17 @@ private:
+     ~LAppDelegate();
+ 
+     /**
+-    * @brief   Cubism SDK の初期化
++    * @brief   Cubism3の初期化
+     */
+     void InitializeCubism();
+ 
+     /**
+-     * @brief   CreateShader内部関数 エラーチェック
++     * @brief   文字列を指定の文字で切り分ける
+      */
+-    bool CheckShader(GLuint shaderId);
++    Csm::csmVector<std::string> Split(const std::string& baseString, char delim);
+ 
+-    LAppAllocator _cubismAllocator;              ///< Cubism SDK Allocator
+-    Csm::CubismFramework::Option _cubismOption;  ///< Cubism SDK Option
++    LAppAllocator _cubismAllocator;              ///< Cubism3 Allocator
++    Csm::CubismFramework::Option _cubismOption;  ///< Cubism3 Option
+     GLFWwindow* _window;                         ///< OpenGL ウィンドウ
+     LAppView* _view;                             ///< View情報
+     bool _captured;                              ///< クリックしているか
+@@ -126,28 +125,8 @@ private:
+     float _mouseY;                               ///< マウスY座標
+     bool _isEnd;                                 ///< APP終了しているか
+     LAppTextureManager* _textureManager;         ///< テクスチャマネージャー
++    std::string _rootDirectory; ///< ルートディレクトリ
+ 
+     int _windowWidth;                            ///< Initialize関数で設定したウィンドウ幅
+     int _windowHeight;                           ///< Initialize関数で設定したウィンドウ高さ
+ };
+-
+-class EventHandler
+-{
+-public:
+-    /**
+-    * @brief   glfwSetMouseButtonCallback用コールバック関数。
+-    */
+-    static void OnMouseCallBack(GLFWwindow* window, int button, int action, int modify)
+-    {
+-        LAppDelegate::GetInstance()->OnMouseCallBack(window, button, action, modify);
+-    }
+-
+-    /**
+-    * @brief   glfwSetCursorPosCallback用コールバック関数。
+-    */
+-    static void OnMouseCallBack(GLFWwindow* window, double x, double y)
+-    {
+-         LAppDelegate::GetInstance()->OnMouseCallBack(window, x, y);
+-    }
+-
+-};
+diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src/LAppLive2DManager.cpp
+--- ./demo_clean/src/LAppLive2DManager.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppLive2DManager.cpp	2023-03-05 23:22:10.967799000 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -15,6 +15,7 @@
+ #include "LAppDelegate.hpp"
+ #include "LAppModel.hpp"
+ #include "LAppView.hpp"
++#include "LAppSprite.hpp"
+ 
+ using namespace Csm;
+ using namespace LAppDefine;
+@@ -51,11 +52,11 @@ void LAppLive2DManager::ReleaseInstance(
+ 
+ LAppLive2DManager::LAppLive2DManager()
+     : _viewMatrix(NULL)
+-    , _sceneIndex(0)
++    , _projScaleFactor(1.0f)
++    , _translateX(0.0f)
++    , _translateY(0.0f)
+ {
+     _viewMatrix = new CubismMatrix44();
+-
+-    ChangeScene(_sceneIndex);
+ }
+ 
+ LAppLive2DManager::~LAppLive2DManager()
+@@ -99,26 +100,6 @@ void LAppLive2DManager::OnTap(csmFloat32
+     {
+         LAppPal::PrintLog("[APP]tap point: {x:%.2f y:%.2f}", x, y);
+     }
+-
+-    for (csmUint32 i = 0; i < _models.GetSize(); i++)
+-    {
+-        if (_models[i]->HitTest(HitAreaNameHead, x, y))
+-        {
+-            if (DebugLogEnable)
+-            {
+-                LAppPal::PrintLog("[APP]hit area: [%s]", HitAreaNameHead);
+-            }
+-            _models[i]->SetRandomExpression();
+-        }
+-        else if (_models[i]->HitTest(HitAreaNameBody, x, y))
+-        {
+-            if (DebugLogEnable)
+-            {
+-                LAppPal::PrintLog("[APP]hit area: [%s]", HitAreaNameBody);
+-            }
+-            _models[i]->StartRandomMotion(MotionGroupTapBody, PriorityNormal, FinishedMotion);
+-        }
+-    }
+ }
+ 
+ void LAppLive2DManager::OnUpdate() const
+@@ -126,10 +107,10 @@ void LAppLive2DManager::OnUpdate() const
+     int width, height;
+     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
+ 
++    CubismMatrix44 projection;
+     csmUint32 modelCount = _models.GetSize();
+     for (csmUint32 i = 0; i < modelCount; ++i)
+     {
+-        CubismMatrix44 projection;
+         LAppModel* model = GetModel(i);
+ 
+         if (model->GetModel() == NULL)
+@@ -142,12 +123,15 @@ void LAppLive2DManager::OnUpdate() const
+         {
+             // 横に長いモデルを縦長ウィンドウに表示する際モデルの横サイズでscaleを算出する
+             model->GetModelMatrix()->SetWidth(2.0f);
+-            projection.Scale(1.0f, static_cast<float>(width) / static_cast<float>(height));
++            projection.Scale(_projScaleFactor,
++                             _projScaleFactor * static_cast<float>(width) / static_cast<float>(height));
+         }
+         else
+         {
+-            projection.Scale(static_cast<float>(height) / static_cast<float>(width), 1.0f);
++            projection.Scale(_projScaleFactor * static_cast<float>(height) / static_cast<float>(width),
++                             _projScaleFactor);
+         }
++        projection.Translate(_translateX, _translateY);
+ 
+         // 必要があればここで乗算
+         if (_viewMatrix != NULL)
+@@ -155,41 +139,23 @@ void LAppLive2DManager::OnUpdate() const
+             projection.MultiplyByMatrix(_viewMatrix);
+         }
+ 
+-        // モデル1体描画前コール
+         LAppDelegate::GetInstance()->GetView()->PreModelDraw(*model);
+ 
+         model->Update();
+         model->Draw(projection);///< 参照渡しなのでprojectionは変質する
+ 
+-        // モデル1体描画後コール
+         LAppDelegate::GetInstance()->GetView()->PostModelDraw(*model);
+     }
+ }
+ 
+-void LAppLive2DManager::NextScene()
+-{
+-    csmInt32 no = (_sceneIndex + 1) % ModelDirSize;
+-    ChangeScene(no);
+-}
+-
+-void LAppLive2DManager::ChangeScene(Csm::csmInt32 index)
++void LAppLive2DManager::SetModel(std::string modelName, bool useOldParamId)
+ {
+-    _sceneIndex = index;
+-    if (DebugLogEnable)
+-    {
+-        LAppPal::PrintLog("[APP]model index: %d", _sceneIndex);
+-    }
+-
+-    // ModelDir[]に保持したディレクトリ名から
+-    // model3.jsonのパスを決定する.
+-    // ディレクトリ名とmodel3.jsonの名前を一致させておくこと.
+-    std::string model = ModelDir[index];
+-    std::string modelPath = ResourcesPath + model + "/";
+-    std::string modelJsonName = ModelDir[index];
++    std::string modelPath = LAppDelegate::GetInstance()->GetRootDirectory() + ResourcesPath + modelName + "/";
++    std::string modelJsonName = modelName;
+     modelJsonName += ".model3.json";
+ 
+     ReleaseAllModel();
+-    _models.PushBack(new LAppModel());
++    _models.PushBack(new LAppModel(useOldParamId));
+     _models[0]->LoadAssets(modelPath.c_str(), modelJsonName.c_str());
+ 
+     /*
+@@ -211,16 +177,21 @@ void LAppLive2DManager::ChangeScene(Csm:
+ 
+ #if defined(USE_RENDER_TARGET) || defined(USE_MODEL_RENDER_TARGET)
+         // モデル個別にαを付けるサンプルとして、もう1体モデルを作成し、少し位置をずらす
+-        _models.PushBack(new LAppModel());
++        _models.PushBack(new LAppModel(useOldParamId));
+         _models[1]->LoadAssets(modelPath.c_str(), modelJsonName.c_str());
+         _models[1]->GetModelMatrix()->TranslateX(0.2f);
+ #endif
+ 
++        float clearColor[3] = { 1.0f, 1.0f, 1.0f };
++
+         LAppDelegate::GetInstance()->GetView()->SwitchRenderingTarget(useRenderTarget);
+ 
+-        // 別レンダリング先を選択した際の背景クリア色
+-        float clearColor[3] = { 1.0f, 1.0f, 1.0f };
+-        LAppDelegate::GetInstance()->GetView()->SetRenderTargetClearColor(clearColor[0], clearColor[1], clearColor[2]);
++        if(useRenderTarget)
++        {
++            LAppDelegate::GetInstance()->GetView()->SwitchRenderingTarget(useRenderTarget);
++            // 背景クリア色
++            LAppDelegate::GetInstance()->GetView()->SetRenderTargetClearColor(clearColor[0], clearColor[1], clearColor[2]);
++        }
+     }
+ }
+ 
+@@ -235,3 +206,20 @@ void LAppLive2DManager::SetViewMatrix(Cu
+         _viewMatrix->GetArray()[i] = m->GetArray()[i];
+     }
+ }
++
++void LAppLive2DManager::SetFacialLandmarkDetector(FacialLandmarkDetector *detector)
++{
++    for (auto it = _models.Begin(); it != _models.End(); ++it)
++    {
++        (*it)->SetFacialLandmarkDetector(detector);
++    }
++}
++
++void LAppLive2DManager::SetProjectionScaleTranslate(float scaleFactor,
++                                                    float translateX,
++                                                    float translateY)
++{
++    _projScaleFactor = scaleFactor;
++    _translateX = translateX;
++    _translateY = translateY;
++}
+diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src/LAppLive2DManager.hpp
+--- ./demo_clean/src/LAppLive2DManager.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppLive2DManager.hpp	2023-03-05 23:22:10.829032000 +0000
+@@ -1,18 +1,20 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+  * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+  */
+-
+ #pragma once
+ 
++#include <string>
+ #include <CubismFramework.hpp>
+ #include <Math/CubismMatrix44.hpp>
+ #include <Type/csmVector.hpp>
+ 
+ class LAppModel;
+ 
++class FacialLandmarkDetector;
++
+ /**
+ * @brief サンプルアプリケーションにおいてCubismModelを管理するクラス<br>
+ *         モデル生成と破棄、タップイベントの処理、モデル切り替えを行う。
+@@ -73,16 +75,14 @@ public:
+     void OnUpdate() const;
+ 
+     /**
+-    * @brief   次のシーンに切り替える<br>
+-    *           サンプルアプリケーションではモデルセットの切り替えを行う。
+-    */
+-    void NextScene();
+-
+-    /**
+-    * @brief   シーンを切り替える<br>
+-    *           サンプルアプリケーションではモデルセットの切り替えを行う。
+-    */
+-    void ChangeScene(Csm::csmInt32 index);
++     * @brief Set model data
++     *
++     * @param[in] modelName : Name of model, should be the same for both
++     *                        the directory and the model3.json file
++     * @param[in] useOldParamId : If true, translate new (Cubism 3+)
++     *                            parameter IDs to old (Cubism 2.1) ones
++     */
++    void SetModel(std::string modelName, bool useOldParamId);
+ 
+     /**
+      * @brief   モデル個数を得る
+@@ -95,6 +95,24 @@ public:
+      */
+     void SetViewMatrix(Live2D::Cubism::Framework::CubismMatrix44* m);
+ 
++    /**
++     * @brief Set the pointer to the FacialLandmarkDetector instance
++     *
++     * @param[in] detector : Pointer to FacialLandmarkDetector instance
++     */
++    void SetFacialLandmarkDetector(FacialLandmarkDetector *detector);
++
++    /**
++     * @brief Set projection scale factor and translation parameters
++     *
++     * @param[in] scaleFactor : Scale factor applied in both X and Y directions
++     * @param[in] translateX : Translation in X direction
++     * @param[in] translateY : Translation in Y direction
++     */
++    void SetProjectionScaleTranslate(float scaleFactor,
++                                     float translateX,
++                                     float translateY);
++
+ private:
+     /**
+     * @brief  コンストラクタ
+@@ -108,5 +126,8 @@ private:
+ 
+     Csm::CubismMatrix44*        _viewMatrix; ///< モデル描画に用いるView行列
+     Csm::csmVector<LAppModel*>  _models; ///< モデルインスタンスのコンテナ
+-    Csm::csmInt32               _sceneIndex; ///< 表示するシーンのインデックス値
++
++    float _projScaleFactor;
++    float _translateX;
++    float _translateY;
+ };
+diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppModel.cpp
+--- ./demo_clean/src/LAppModel.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppModel.cpp	2023-03-05 23:22:10.797100200 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -21,6 +21,8 @@
+ #include "LAppTextureManager.hpp"
+ #include "LAppDelegate.hpp"
+ 
++#include "facial_landmark_detector.h"
++
+ using namespace Live2D::Cubism::Framework;
+ using namespace Live2D::Cubism::Framework::DefaultParameterId;
+ using namespace LAppDefine;
+@@ -45,22 +47,24 @@ namespace {
+     }
+ }
+ 
+-LAppModel::LAppModel()
++LAppModel::LAppModel(bool useOldParamId)
+     : CubismUserModel()
+     , _modelSetting(NULL)
+     , _userTimeSeconds(0.0f)
++    , _detector(nullptr)
++    , _useOldParamId(useOldParamId)
+ {
+     if (DebugLogEnable)
+     {
+         _debugMode = true;
+     }
+ 
+-    _idParamAngleX = CubismFramework::GetIdManager()->GetId(ParamAngleX);
+-    _idParamAngleY = CubismFramework::GetIdManager()->GetId(ParamAngleY);
+-    _idParamAngleZ = CubismFramework::GetIdManager()->GetId(ParamAngleZ);
+-    _idParamBodyAngleX = CubismFramework::GetIdManager()->GetId(ParamBodyAngleX);
+-    _idParamEyeBallX = CubismFramework::GetIdManager()->GetId(ParamEyeBallX);
+-    _idParamEyeBallY = CubismFramework::GetIdManager()->GetId(ParamEyeBallY);
++    _idParamAngleX = CubismFramework::GetIdManager()->GetId(_(ParamAngleX));
++    _idParamAngleY = CubismFramework::GetIdManager()->GetId(_(ParamAngleY));
++    _idParamAngleZ = CubismFramework::GetIdManager()->GetId(_(ParamAngleZ));
++    _idParamBodyAngleX = CubismFramework::GetIdManager()->GetId(_(ParamBodyAngleX));
++    _idParamEyeBallX = CubismFramework::GetIdManager()->GetId(_(ParamEyeBallX));
++    _idParamEyeBallY = CubismFramework::GetIdManager()->GetId(_(ParamEyeBallY));
+ }
+ 
+ LAppModel::~LAppModel()
+@@ -96,12 +100,6 @@ void LAppModel::LoadAssets(const csmChar
+ 
+     SetupModel(setting);
+ 
+-    if (_model == NULL)
+-    {
+-        LAppPal::PrintLog("Failed to LoadAssets().");
+-        return;
+-    }
+-
+     CreateRenderer();
+ 
+     SetupTextures();
+@@ -134,30 +132,6 @@ void LAppModel::SetupModel(ICubismModelS
+         DeleteBuffer(buffer, path.GetRawString());
+     }
+ 
+-    //Expression
+-    if (_modelSetting->GetExpressionCount() > 0)
+-    {
+-        const csmInt32 count = _modelSetting->GetExpressionCount();
+-        for (csmInt32 i = 0; i < count; i++)
+-        {
+-            csmString name = _modelSetting->GetExpressionName(i);
+-            csmString path = _modelSetting->GetExpressionFileName(i);
+-            path = _modelHomeDir + path;
+-
+-            buffer = CreateBuffer(path.GetRawString(), &size);
+-            ACubismMotion* motion = LoadExpression(buffer, size, name.GetRawString());
+-
+-            if (_expressions[name] != NULL)
+-            {
+-                ACubismMotion::Delete(_expressions[name]);
+-                _expressions[name] = NULL;
+-            }
+-            _expressions[name] = motion;
+-
+-            DeleteBuffer(buffer, path.GetRawString());
+-        }
+-    }
+-
+     //Physics
+     if (strcmp(_modelSetting->GetPhysicsFileName(), "") != 0)
+     {
+@@ -196,7 +170,7 @@ void LAppModel::SetupModel(ICubismModelS
+         breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
+         breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
+         breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamBodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
+-        breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(ParamBreath), 0.5f, 0.5f, 3.2345f, 0.5f));
++        breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(_(ParamBreath)), 0.5f, 0.5f, 3.2345f, 0.5f));
+ 
+         _breath->SetParameters(breathParameters);
+     }
+@@ -220,21 +194,6 @@ void LAppModel::SetupModel(ICubismModelS
+         }
+     }
+ 
+-    // LipSyncIds
+-    {
+-        csmInt32 lipSyncIdCount = _modelSetting->GetLipSyncParameterCount();
+-        for (csmInt32 i = 0; i < lipSyncIdCount; ++i)
+-        {
+-            _lipSyncIds.PushBack(_modelSetting->GetLipSyncParameterId(i));
+-        }
+-    }
+-
+-    if (_modelSetting == NULL || _modelMatrix == NULL)
+-    {
+-        LAppPal::PrintLog("Failed to SetupModel().");
+-        return;
+-    }
+-
+     //Layout
+     csmMap<csmString, csmFloat32> layout;
+     _modelSetting->GetLayoutMap(layout);
+@@ -347,59 +306,57 @@ void LAppModel::Update()
+     const csmFloat32 deltaTimeSeconds = LAppPal::GetDeltaTime();
+     _userTimeSeconds += deltaTimeSeconds;
+ 
+-    _dragManager->Update(deltaTimeSeconds);
+-    _dragX = _dragManager->GetX();
+-    _dragY = _dragManager->GetY();
+-
+-    // モーションによるパラメータ更新の有無
+-    csmBool motionUpdated = false;
+-
+-    //-----------------------------------------------------------------
+-    _model->LoadParameters(); // 前回セーブされた状態をロード
+-    if (_motionManager->IsFinished())
++    if (_detector)
+     {
+-        // モーションの再生がない場合、待機モーションの中からランダムで再生する
+-        StartRandomMotion(MotionGroupIdle, PriorityIdle);
+-    }
+-    else
+-    {
+-        motionUpdated = _motionManager->UpdateMotion(_model, deltaTimeSeconds); // モーションを更新
+-    }
+-    _model->SaveParameters(); // 状態を保存
+-    //-----------------------------------------------------------------
++        auto idMan = CubismFramework::GetIdManager();
++        auto params = _detector->getParams();
+ 
+-    // まばたき
+-    if (!motionUpdated)
+-    {
+-        if (_eyeBlink != NULL)
++        // NOTE: Apparently, this LoadParameters/SaveParameters pair
++        // is needed for auto breath to work.
++        _model->LoadParameters(); // 前回セーブされた状態をロード
++        if (_motionManager->IsFinished() && params.randomMotion)
+         {
+-            // メインモーションの更新がないとき
+-            _eyeBlink->UpdateParameters(_model, deltaTimeSeconds); // 目パチ
++            // モーションの再生がない場合、待機モーションの中からランダムで再生する
++            StartRandomMotion(MotionGroupIdle, PriorityIdle);
+         }
+-    }
+-
+-    if (_expressionManager != NULL)
+-    {
+-        _expressionManager->UpdateMotion(_model, deltaTimeSeconds); // 表情でパラメータ更新（相対変化）
+-    }
+-
+-    //ドラッグによる変化
+-    //ドラッグによる顔の向きの調整
+-    _model->AddParameterValue(_idParamAngleX, _dragX * 30); // -30から30の値を加える
+-    _model->AddParameterValue(_idParamAngleY, _dragY * 30);
+-    _model->AddParameterValue(_idParamAngleZ, _dragX * _dragY * -30);
+-
+-    //ドラッグによる体の向きの調整
+-    _model->AddParameterValue(_idParamBodyAngleX, _dragX * 10); // -10から10の値を加える
++        else
++        {
++            _motionManager->UpdateMotion(_model, deltaTimeSeconds); // モーションを更新
++        }
++        _model->SaveParameters(); // 状態を保存
+ 
+-    //ドラッグによる目の向きの調整
+-    _model->AddParameterValue(_idParamEyeBallX, _dragX); // -1から1の値を加える
+-    _model->AddParameterValue(_idParamEyeBallY, _dragY);
+ 
+-    // 呼吸など
+-    if (_breath != NULL)
+-    {
+-        _breath->UpdateParameters(_model, deltaTimeSeconds);
++        if (params.autoBlink && _eyeBlink)
++        {
++            _eyeBlink->UpdateParameters(_model, deltaTimeSeconds);
++        }
++        else
++        {
++            _model->SetParameterValue(idMan->GetId(_("ParamEyeLOpen")),
++                                      params.leftEyeOpenness);
++            _model->SetParameterValue(idMan->GetId(_("ParamEyeROpen")),
++                                      params.rightEyeOpenness);
++        }
++        _model->SetParameterValue(idMan->GetId(_("ParamMouthForm")),
++                                  params.mouthForm);
++        _model->SetParameterValue(idMan->GetId(_("ParamMouthOpenY")),
++                                  params.mouthOpenness);
++        _model->SetParameterValue(idMan->GetId(_("ParamEyeLSmile")),
++                                  params.leftEyeSmile);
++        _model->SetParameterValue(idMan->GetId(_("ParamEyeRSmile")),
++                                  params.rightEyeSmile);
++        _model->SetParameterValue(idMan->GetId(_("ParamAngleX")),
++                                  params.faceXAngle);
++        _model->SetParameterValue(idMan->GetId(_("ParamAngleY")),
++                                  params.faceYAngle);
++        _model->SetParameterValue(idMan->GetId(_("ParamAngleZ")),
++                                  params.faceZAngle);
++        if (params.autoBreath && _breath)
++        {
++            // Note: _model->LoadParameters and SaveParameters is needed
++            // before - see above.
++            _breath->UpdateParameters(_model, deltaTimeSeconds);
++        }
+     }
+ 
+     // 物理演算の設定
+@@ -408,22 +365,6 @@ void LAppModel::Update()
+         _physics->Evaluate(_model, deltaTimeSeconds);
+     }
+ 
+-    // リップシンクの設定
+-    if (_lipSync)
+-    {
+-        // リアルタイムでリップシンクを行う場合、システムから音量を取得して0〜1の範囲で値を入力します。
+-        csmFloat32 value = 0.0f;
+-
+-        // 状態更新/RMS値取得
+-        _wavFileHandler.Update(deltaTimeSeconds);
+-        value = _wavFileHandler.GetRms();
+-
+-        for (csmUint32 i = 0; i < _lipSyncIds.GetSize(); ++i)
+-        {
+-            _model->AddParameterValue(_lipSyncIds[i], value, 0.8f);
+-        }
+-    }
+-
+     // ポーズの設定
+     if (_pose != NULL)
+     {
+@@ -492,7 +433,6 @@ CubismMotionQueueEntryHandle LAppModel::
+     {
+         csmString path = voice;
+         path = _modelHomeDir + path;
+-        _wavFileHandler.Start(path);
+     }
+ 
+     if (_debugMode)
+@@ -644,3 +584,37 @@ Csm::Rendering::CubismOffscreenFrame_Ope
+ {
+     return _renderBuffer;
+ }
++
++void LAppModel::SetFacialLandmarkDetector(FacialLandmarkDetector *detector)
++{
++    _detector = detector;
++}
++
++Csm::csmString LAppModel::_(std::string s)
++{
++    std::string ans;
++    if (_useOldParamId)
++    {
++        if (s == "ParamTere")
++        {
++            ans = "PARAM_CHEEK";
++        }
++        else
++        {
++            for (size_t i = 0; i < s.size(); i++)
++            {
++                if (std::isupper(s[i]) && i != 0)
++                {
++                    ans += '_';
++                }
++                ans += std::toupper(s[i]);
++            }
++        }
++    }
++    else
++    {
++        ans = s;
++    }
++    return csmString(ans.c_str());
++}
++
+diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppModel.hpp
+--- ./demo_clean/src/LAppModel.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppModel.hpp	2023-03-05 23:22:10.907889300 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -13,7 +13,7 @@
+ #include <Type/csmRectF.hpp>
+ #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
+ 
+-#include "LAppWavFileHandler.hpp"
++#include "facial_landmark_detector.h"
+ 
+ /**
+  * @brief ユーザーが実際に使用するモデルの実装クラス<br>
+@@ -25,8 +25,11 @@ class LAppModel : public Csm::CubismUser
+ public:
+     /**
+      * @brief コンストラクタ
++     *
++     * @param[in] useOldParamId : If true, translate new (Cubism 3+)
++     *                            parameter IDs to old (Cubism 2.1)  ones
+      */
+-    LAppModel();
++    LAppModel(bool useOldParamId);
+ 
+     /**
+      * @brief デストラクタ
+@@ -114,6 +117,13 @@ public:
+      */
+     Csm::Rendering::CubismOffscreenFrame_OpenGLES2& GetRenderBuffer();
+ 
++    /**
++     * @brief Set the pointer to the FacialLandmarkDetector instance
++     *
++     * @param[in] detector : Pointer to FacialLandmarkDetector instance
++     */
++    void SetFacialLandmarkDetector(FacialLandmarkDetector *detector);
++
+ protected:
+     /**
+      *  @brief  モデルを描画する処理。モデルを描画する空間のView-Projection行列を渡す。
+@@ -167,6 +177,17 @@ private:
+     */
+     void ReleaseExpressions();
+ 
++    /**
++     * @brief Translate new (Cubism 3+) parameter IDs to old (Cubism 2.1) ones
++     *
++     * @param[in] s : New parameter ID
++     *
++     * @return Old parameter ID
++     */
++    Csm::csmString _(std::string s);
++
++    bool _useOldParamId;
++
+     Csm::ICubismModelSetting* _modelSetting; ///< モデルセッティング情報
+     Csm::csmString _modelHomeDir; ///< モデルセッティングが置かれたディレクトリ
+     Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
+@@ -183,9 +204,9 @@ private:
+     const Csm::CubismId* _idParamEyeBallX; ///< パラメータID: ParamEyeBallX
+     const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
+ 
+-    LAppWavFileHandler _wavFileHandler; ///< wavファイルハンドラ
++    Csm::Rendering::CubismOffscreenFrame_OpenGLES2 _renderBuffer;   ///< フレームバッファ以外の描画先
+ 
+-    Csm::Rendering::CubismOffscreenFrame_OpenGLES2  _renderBuffer;   ///< フレームバッファ以外の描画先
++    FacialLandmarkDetector *_detector;
+ };
+ 
+ 
+diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.cpp
+--- ./demo_clean/src/LAppPal.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppPal.cpp	2023-03-05 23:22:10.834981800 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -6,7 +6,9 @@
+  */
+ 
+ #include "LAppPal.hpp"
+-#include <cstdio>
++#include <stdexcept>
++#include <stdio.h>
++#include <stdlib.h>
+ #include <stdarg.h>
+ #include <sys/stat.h>
+ #include <iostream>
+@@ -35,6 +37,7 @@ csmByte* LAppPal::LoadFileAsBytes(const
+     if (stat(path, &statBuf) == 0)
+     {
+         size = statBuf.st_size;
++        PrintLog(path);
+     }
+ 
+     std::fstream file;
+@@ -43,10 +46,7 @@ csmByte* LAppPal::LoadFileAsBytes(const
+     file.open(path, std::ios::in | std::ios::binary);
+     if (!file.is_open())
+     {
+-        if (DebugLogEnable)
+-        {
+-            PrintLog("file open error");
+-        }
++        throw std::runtime_error("Failed to open file " + filePath);
+         return NULL;
+     }
+     file.read(buf, size);
+@@ -78,13 +78,8 @@ void LAppPal::PrintLog(const csmChar* fo
+     va_list args;
+     csmChar buf[256];
+     va_start(args, format);
+-    vsnprintf_s(buf, sizeof(buf), format, args); // 標準出力でレンダリング
+-#ifdef CSM_DEBUG_MEMORY_LEAKING
+-// メモリリークチェック時は大量の標準出力がはしり重いのでprintfを利用する
+-    std::printf(buf);
+-#else
++    vsnprintf(buf, sizeof(buf), format, args); // 標準出力でレンダリング
+     std::cerr << buf << std::endl;
+-#endif
+     va_end(args);
+ }
+ 
+diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.hpp
+--- ./demo_clean/src/LAppPal.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppPal.hpp	2023-03-05 23:22:10.939820800 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -8,6 +8,7 @@
+ #pragma once
+ 
+ #include <CubismFramework.hpp>
++#include <cstdlib>
+ #include <string>
+ 
+ /**
+diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSprite.cpp
+--- ./demo_clean/src/LAppSprite.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppSprite.cpp	2023-03-05 23:22:10.900085700 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -39,9 +39,9 @@ void LAppSprite::Render() const
+     int maxWidth, maxHeight;
+     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &maxWidth, &maxHeight);
+ 
+-    if (maxWidth == 0 || maxHeight == 0)
++    if(maxWidth==0 || maxHeight==0)
+     {
+-        return; // この際は描画できず
++        return;
+     }
+ 
+     const GLfloat uvVertex[] =
+@@ -74,7 +74,6 @@ void LAppSprite::Render() const
+ 
+     glUniform4f(_colorLocation, _spriteColor[0], _spriteColor[1], _spriteColor[2], _spriteColor[3]);
+ 
+-
+     // モデルの描画
+     glBindTexture(GL_TEXTURE_2D, _textureId);
+     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+@@ -86,9 +85,9 @@ void LAppSprite::RenderImmidiate(GLuint
+     int maxWidth, maxHeight;
+     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &maxWidth, &maxHeight);
+ 
+-    if (maxWidth == 0 || maxHeight == 0)
++    if(maxWidth==0 || maxHeight==0)
+     {
+-        return; // この際は描画できず
++        return;
+     }
+ 
+     // attribute属性を有効にする
+@@ -124,11 +123,10 @@ bool LAppSprite::IsHit(float pointX, flo
+     int maxWidth, maxHeight;
+     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &maxWidth, &maxHeight);
+ 
+-    if (maxWidth == 0 || maxHeight == 0)
++    if(maxWidth==0 || maxHeight==0)
+     {
+-        return false; // この際は描画できず
++        return false;
+     }
+-
+     //Y座標は変換する必要あり
+     float y = maxHeight - pointY;
+ 
+diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSprite.hpp
+--- ./demo_clean/src/LAppSprite.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppSprite.hpp	2023-03-05 23:22:10.876156000 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -61,7 +61,7 @@ public:
+     void Render() const;
+ 
+     /**
+-    * @brief テクスチャIDを指定して描画する
++    * @brief テクスチャを指定しての描画
+     *
+     */
+     void RenderImmidiate(GLuint textureId, const GLfloat uvVertex[8]) const;
+@@ -95,8 +95,8 @@ public:
+     void ResetRect(float x, float y, float width, float height);
+ 
+ private:
+-    GLuint _textureId;      ///< テクスチャID
+-    Rect _rect;             ///< 矩形
++    GLuint _textureId;   ///< テクスチャID
++    Rect _rect;          ///< 矩形
+     int _positionLocation;  ///< 位置アトリビュート
+     int _uvLocation;        ///< UVアトリビュート
+     int _textureLocation;   ///< テクスチャアトリビュート
+diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/src/LAppTextureManager.cpp
+--- ./demo_clean/src/LAppTextureManager.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppTextureManager.cpp	2023-03-05 23:22:10.765166600 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -10,7 +10,14 @@
+ #define STBI_NO_STDIO
+ #define STBI_ONLY_PNG
+ #define STB_IMAGE_IMPLEMENTATION
++#if defined(__clang__)
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wunused-function"
++#endif
+ #include "stb_image.h"
++#if defined(__clang__)
++#pragma clang diagnostic pop
++#endif
+ #include "LAppPal.hpp"
+ 
+ LAppTextureManager::LAppTextureManager()
+@@ -89,6 +96,46 @@ LAppTextureManager::TextureInfo* LAppTex
+ 
+ }
+ 
++LAppTextureManager::TextureInfo* LAppTextureManager::CreateTextureFromColor(
++    uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha
++)
++{
++    constexpr int width = 8, height = 8;
++
++    uint8_t pixels[height][width][4];
++    for (std::size_t h = 0; h < height; h++)
++    {
++        for (std::size_t w = 0; w < width; w++)
++        {
++            pixels[h][w][0] = red;
++            pixels[h][w][1] = green;
++            pixels[h][w][2] = blue;
++            pixels[h][w][3] = alpha;
++        }
++    }
++
++    GLuint textureId;
++    glGenTextures(1, &textureId);
++    glBindTexture(GL_TEXTURE_2D, textureId);
++    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
++
++    glGenerateMipmap(GL_TEXTURE_2D);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
++    glBindTexture(GL_TEXTURE_2D, 0);
++
++
++    LAppTextureManager::TextureInfo* textureInfo = new LAppTextureManager::TextureInfo();
++    textureInfo->fileName = "";
++    textureInfo->width = width;
++    textureInfo->height = height;
++    textureInfo->id = textureId;
++
++    _textures.PushBack(textureInfo);
++
++    return textureInfo;
++}
++
+ void LAppTextureManager::ReleaseTextures()
+ {
+     for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
+diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/src/LAppTextureManager.hpp
+--- ./demo_clean/src/LAppTextureManager.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppTextureManager.hpp	2023-03-05 23:22:10.822016600 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -72,6 +72,8 @@ public:
+     */
+     TextureInfo* CreateTextureFromPngFile(std::string fileName);
+ 
++    TextureInfo *CreateTextureFromColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255);
++
+     /**
+     * @brief 画像の解放
+     *
+@@ -98,9 +100,9 @@ public:
+     /**
+      * @brief テクスチャIDからテクスチャ情報を得る
+      *
+-     * @param   textureId[in]       取得したいテクスチャID
+-     * @return  テクスチャが存在していればTextureInfoが返る
+-     */
++     * @param[in] textureId  取得したいテクスチャID
++     * @return テクスチャが存在していればTextureInfoが返る
++     **/
+     TextureInfo* GetTextureInfoById(GLuint textureId) const;
+ 
+ private:
+diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView.cpp
+--- ./demo_clean/src/LAppView.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppView.cpp	2023-03-05 23:22:10.804064800 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -13,18 +13,18 @@
+ #include "LAppLive2DManager.hpp"
+ #include "LAppTextureManager.hpp"
+ #include "LAppDefine.hpp"
+-#include "TouchManager.hpp"
+ #include "LAppSprite.hpp"
+ #include "LAppModel.hpp"
+ 
++#include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
++#include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
++
+ using namespace std;
+ using namespace LAppDefine;
+ 
+ LAppView::LAppView():
+     _programId(0),
+     _back(NULL),
+-    _gear(NULL),
+-    _power(NULL),
+     _renderSprite(NULL),
+     _renderTarget(SelectTarget_None)
+ {
+@@ -33,9 +33,6 @@ LAppView::LAppView():
+     _clearColor[2] = 1.0f;
+     _clearColor[3] = 0.0f;
+ 
+-    // タッチ関係のイベント管理
+-    _touchManager = new TouchManager();
+-
+     // デバイス座標からスクリーン座標に変換するための
+     _deviceToScreen = new CubismMatrix44();
+ 
+@@ -47,12 +44,10 @@ LAppView::~LAppView()
+ {
+     _renderBuffer.DestroyOffscreenFrame();
+     delete _renderSprite;
++
+     delete _viewMatrix;
+     delete _deviceToScreen;
+-    delete _touchManager;
+     delete _back;
+-    delete _gear;
+-    delete _power;
+ }
+ 
+ void LAppView::Initialize()
+@@ -75,7 +70,7 @@ void LAppView::Initialize()
+     _viewMatrix->SetScreenRect(left, right, bottom, top); // デバイスに対応する画面の範囲。 Xの左端, Xの右端, Yの下端, Yの上端
+     _viewMatrix->Scale(ViewScale, ViewScale);
+ 
+-    _deviceToScreen->LoadIdentity(); // サイズが変わった際などリセット必須
++    _deviceToScreen->LoadIdentity();
+     if (width > height)
+     {
+         float screenW = fabsf(right - left);
+@@ -104,8 +99,6 @@ void LAppView::Initialize()
+ void LAppView::Render()
+ {
+     _back->Render();
+-    _gear->Render();
+-    _power->Render();
+ 
+     LAppLive2DManager* Live2DManager = LAppLive2DManager::GetInstance();
+ 
+@@ -125,7 +118,7 @@ void LAppView::Render()
+             1.0f, 0.0f,
+         };
+ 
+-        for (csmUint32 i = 0; i < Live2DManager->GetModelNum(); i++)
++        for(csmUint32 i=0; i<Live2DManager->GetModelNum(); i++)
+         {
+             float alpha = GetSpriteAlpha(i); // サンプルとしてαに適当な差をつける
+             _renderSprite->SetColor(1.0f, 1.0f, 1.0f, alpha);
+@@ -133,7 +126,7 @@ void LAppView::Render()
+             LAppModel *model = Live2DManager->GetModel(i);
+             if (model)
+             {
+-                _renderSprite->RenderImmidiate( model->GetRenderBuffer().GetColorBuffer(), uvVertex);
++                _renderSprite->RenderImmidiate(model->GetRenderBuffer().GetColorBuffer(), uvVertex);
+             }
+         }
+     }
+@@ -147,85 +140,22 @@ void LAppView::InitializeSprite()
+     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
+ 
+     LAppTextureManager* textureManager = LAppDelegate::GetInstance()->GetTextureManager();
+-    const string resourcesPath = ResourcesPath;
+ 
+-    string imageName = BackImageName;
+-    LAppTextureManager::TextureInfo* backgroundTexture = textureManager->CreateTextureFromPngFile(resourcesPath + imageName);
++
++    LAppTextureManager::TextureInfo* backgroundTexture =
++        textureManager->CreateTextureFromColor(0, 255, 0);
+ 
+     float x = width * 0.5f;
+     float y = height * 0.5f;
+-    float fWidth = static_cast<float>(backgroundTexture->width * 2.0f);
+-    float fHeight = static_cast<float>(height * 0.95f);
++    float fWidth = static_cast<float>(width);
++    float fHeight = static_cast<float>(height);
+     _back = new LAppSprite(x, y, fWidth, fHeight, backgroundTexture->id, _programId);
+ 
+-    imageName = GearImageName;
+-    LAppTextureManager::TextureInfo* gearTexture = textureManager->CreateTextureFromPngFile(resourcesPath + imageName);
+-
+-    x = static_cast<float>(width - gearTexture->width * 0.5f);
+-    y = static_cast<float>(height - gearTexture->height * 0.5f);
+-    fWidth = static_cast<float>(gearTexture->width);
+-    fHeight = static_cast<float>(gearTexture->height);
+-    _gear = new LAppSprite(x, y, fWidth, fHeight, gearTexture->id, _programId);
+-
+-    imageName = PowerImageName;
+-    LAppTextureManager::TextureInfo* powerTexture = textureManager->CreateTextureFromPngFile(resourcesPath + imageName);
+-
+-    x = static_cast<float>(width - powerTexture->width * 0.5f);
+-    y = static_cast<float>(powerTexture->height * 0.5f);
+-    fWidth = static_cast<float>(powerTexture->width);
+-    fHeight = static_cast<float>(powerTexture->height);
+-    _power = new LAppSprite(x, y, fWidth, fHeight, powerTexture->id, _programId);
+-
+     // 画面全体を覆うサイズ
+     x = width * 0.5f;
+     y = height * 0.5f;
+     _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, _programId);
+-}
+-
+-void LAppView::OnTouchesBegan(float px, float py) const
+-{
+-    _touchManager->TouchesBegan(px, py);
+-}
+-
+-void LAppView::OnTouchesMoved(float px, float py) const
+-{
+-    float viewX = this->TransformViewX(_touchManager->GetX());
+-    float viewY = this->TransformViewY(_touchManager->GetY());
+-
+-    _touchManager->TouchesMoved(px, py);
+ 
+-    LAppLive2DManager* Live2DManager = LAppLive2DManager::GetInstance();
+-    Live2DManager->OnDrag(viewX, viewY);
+-}
+-
+-void LAppView::OnTouchesEnded(float px, float py) const
+-{
+-    // タッチ終了
+-    LAppLive2DManager* live2DManager = LAppLive2DManager::GetInstance();
+-    live2DManager->OnDrag(0.0f, 0.0f);
+-    {
+-
+-        // シングルタップ
+-        float x = _deviceToScreen->TransformX(_touchManager->GetX()); // 論理座標変換した座標を取得。
+-        float y = _deviceToScreen->TransformY(_touchManager->GetY()); // 論理座標変換した座標を取得。
+-        if (DebugTouchLogEnable)
+-        {
+-            LAppPal::PrintLog("[APP]touchesEnded x:%.2f y:%.2f", x, y);
+-        }
+-        live2DManager->OnTap(x, y);
+-
+-        // 歯車にタップしたか
+-        if (_gear->IsHit(px, py))
+-        {
+-            live2DManager->NextScene();
+-        }
+-
+-        // 電源ボタンにタップしたか
+-        if (_power->IsHit(px, py))
+-        {
+-            LAppDelegate::GetInstance()->AppEnd();
+-        }
+-    }
+ }
+ 
+ float LAppView::TransformViewX(float deviceX) const
+@@ -250,7 +180,7 @@ float LAppView::TransformScreenY(float d
+     return _deviceToScreen->TransformY(deviceY);
+ }
+ 
+-void LAppView::PreModelDraw(LAppModel& refModel)
++void LAppView::PreModelDraw(LAppModel &refModel)
+ {
+     // 別のレンダリングターゲットへ向けて描画する場合の使用するフレームバッファ
+     Csm::Rendering::CubismOffscreenFrame_OpenGLES2* useTarget = NULL;
+@@ -263,12 +193,13 @@ void LAppView::PreModelDraw(LAppModel& r
+ 
+         if (!useTarget->IsValid())
+         {// 描画ターゲット内部未作成の場合はここで作成
+-            int width, height;
+-            glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
+-            if (width != 0 && height != 0)
++            int bufWidth, bufHeight;
++            glfwGetFramebufferSize(LAppDelegate::GetInstance()->GetWindow(), &bufWidth, &bufHeight);
++
++            if(bufWidth!=0 && bufHeight!=0)
+             {
+                 // モデル描画キャンバス
+-                useTarget->CreateOffscreenFrame(static_cast<csmUint32>(width), static_cast<csmUint32>(height));
++                useTarget->CreateOffscreenFrame(static_cast<csmUint32>(bufWidth), static_cast<csmUint32>(bufHeight));
+             }
+         }
+ 
+@@ -278,7 +209,7 @@ void LAppView::PreModelDraw(LAppModel& r
+     }
+ }
+ 
+-void LAppView::PostModelDraw(LAppModel& refModel)
++void LAppView::PostModelDraw(LAppModel &refModel)
+ {
+     // 別のレンダリングターゲットへ向けて描画する場合の使用するフレームバッファ
+     Csm::Rendering::CubismOffscreenFrame_OpenGLES2* useTarget = NULL;
+@@ -368,32 +299,4 @@ void LAppView::ResizeSprite()
+             _back->ResetRect(x, y, fWidth, fHeight);
+         }
+     }
+-
+-    if (_power)
+-    {
+-        GLuint id = _power->GetTextureId();
+-        LAppTextureManager::TextureInfo* texInfo = textureManager->GetTextureInfoById(id);
+-        if (texInfo)
+-        {
+-            x = static_cast<float>(width - texInfo->width * 0.5f);
+-            y = static_cast<float>(texInfo->height * 0.5f);
+-            fWidth = static_cast<float>(texInfo->width);
+-            fHeight = static_cast<float>(texInfo->height);
+-            _power->ResetRect(x, y, fWidth, fHeight);
+-        }
+-    }
+-
+-    if (_gear)
+-    {
+-        GLuint id = _gear->GetTextureId();
+-        LAppTextureManager::TextureInfo* texInfo = textureManager->GetTextureInfoById(id);
+-        if (texInfo)
+-        {
+-            x = static_cast<float>(width - texInfo->width * 0.5f);
+-            y = static_cast<float>(height - texInfo->height * 0.5f);
+-            fWidth = static_cast<float>(texInfo->width);
+-            fHeight = static_cast<float>(texInfo->height);
+-            _gear->ResetRect(x, y, fWidth, fHeight);
+-        }
+-    }
+ }
+diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView.hpp
+--- ./demo_clean/src/LAppView.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/LAppView.hpp	2023-03-05 23:22:10.892081200 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -14,7 +14,6 @@
+ #include "CubismFramework.hpp"
+ #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
+ 
+-class TouchManager;
+ class LAppSprite;
+ class LAppModel;
+ 
+@@ -61,35 +60,11 @@ public:
+     void InitializeSprite();
+ 
+     /**
+-    * @brief スプライト系のサイズ再設定
+-    */
++     * @brief スプライト系のサイズ再設定
++     */
+     void ResizeSprite();
+ 
+     /**
+-    * @brief タッチされたときに呼ばれる。
+-    *
+-    * @param[in]       pointX            スクリーンX座標
+-    * @param[in]       pointY            スクリーンY座標
+-    */
+-    void OnTouchesBegan(float pointX, float pointY) const;
+-
+-    /**
+-    * @brief タッチしているときにポインタが動いたら呼ばれる。
+-    *
+-    * @param[in]       pointX            スクリーンX座標
+-    * @param[in]       pointY            スクリーンY座標
+-    */
+-    void OnTouchesMoved(float pointX, float pointY) const;
+-
+-    /**
+-    * @brief タッチが終了したら呼ばれる。
+-    *
+-    * @param[in]       pointX            スクリーンX座標
+-    * @param[in]       pointY            スクリーンY座標
+-    */
+-    void OnTouchesEnded(float pointX, float pointY) const;
+-
+-    /**
+     * @brief X座標をView座標に変換する。
+     *
+     * @param[in]       deviceX            デバイスX座標
+@@ -120,12 +95,12 @@ public:
+     /**
+      * @brief   モデル1体を描画する直前にコールされる
+      */
+-    void PreModelDraw(LAppModel& refModel);
++    void PreModelDraw(LAppModel &refModel);
+ 
+     /**
+      * @brief   モデル1体を描画した直後にコールされる
+      */
+-    void PostModelDraw(LAppModel& refModel);
++    void PostModelDraw(LAppModel &refModel);
+ 
+     /**
+      * @brief   別レンダリングターゲットにモデルを描画するサンプルで
+@@ -147,16 +122,13 @@ public:
+     void SetRenderTargetClearColor(float r, float g, float b);
+ 
+ private:
+-    TouchManager* _touchManager;                 ///< タッチマネージャー
+     Csm::CubismMatrix44* _deviceToScreen;    ///< デバイスからスクリーンへの行列
+     Csm::CubismViewMatrix* _viewMatrix;      ///< viewMatrix
+     GLuint _programId;                       ///< シェーダID
+     LAppSprite* _back;                       ///< 背景画像
+-    LAppSprite* _gear;                       ///< ギア画像
+-    LAppSprite* _power;                      ///< 電源画像
+ 
+     // レンダリング先を別ターゲットにする方式の場合に使用
+-    LAppSprite* _renderSprite;                                      ///< モードによっては_renderBufferのテクスチャを描画
++    LAppSprite* _renderSprite;                                  ///< モードによっては_renderBufferのテクスチャを描画
+     Csm::Rendering::CubismOffscreenFrame_OpenGLES2 _renderBuffer;   ///< モードによってはCubismモデル結果をこっちにレンダリング
+     SelectTarget _renderTarget;     ///< レンダリング先の選択肢
+     float _clearColor[4];           ///< レンダリングターゲットのクリアカラー
+diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/src/MouseActionManager.cpp
+--- ./demo_clean/src/MouseActionManager.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/MouseActionManager.cpp	2023-03-05 23:22:10.841970900 +0000
+@@ -1,9 +1,9 @@
+-﻿/**
+- * Copyright(c) Live2D Inc. All rights reserved.
+- *
+- * Use of this source code is governed by the Live2D Open Software license
+- * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+- */
++/**
++* Copyright(c) Live2D Inc. All rights reserved.
++*
++* Use of this source code is governed by the Live2D Open Software license
++* that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++*/
+ 
+ #include "MouseActionManager.hpp"
+ 
+@@ -13,7 +13,7 @@ namespace {
+ 
+ MouseActionManager* MouseActionManager::GetInstance()
+ {
+-    if (instance == NULL)
++    if (!instance)
+     {
+         instance = new MouseActionManager();
+     }
+@@ -23,7 +23,7 @@ MouseActionManager* MouseActionManager::
+ 
+ void MouseActionManager::ReleaseInstance()
+ {
+-    if (instance != NULL)
++    if (instance)
+     {
+         delete instance;
+     }
+@@ -99,18 +99,21 @@ void MouseActionManager::OnMouseCallBack
+         return;
+     }
+ 
+-    if (GLFW_PRESS == action)
++    switch (action)
+     {
++    case GLFW_PRESS:
+         _captured = true;
+         OnTouchesBegan(_mouseX, _mouseY);
+-    }
+-    else if (GLFW_RELEASE == action)
+-    {
++        break;
++    case GLFW_RELEASE:
+         if (_captured)
+         {
+             _captured = false;
+             OnTouchesEnded(_mouseX, _mouseY);
+         }
++        break;
++    default:
++        break;
+     }
+ }
+ 
+diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/src/MouseActionManager.hpp
+--- ./demo_clean/src/MouseActionManager.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/MouseActionManager.hpp	2023-03-05 23:22:10.961094400 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+diff -pruN --exclude build ./demo_clean/src/TouchManager.cpp ./demo_dev/src/TouchManager.cpp
+--- ./demo_clean/src/TouchManager.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/TouchManager.cpp	2023-03-05 23:22:10.861957900 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+diff -pruN --exclude build ./demo_clean/src/TouchManager.hpp ./demo_dev/src/TouchManager.hpp
+--- ./demo_clean/src/TouchManager.hpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/TouchManager.hpp	2023-03-05 23:22:10.884102300 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
+--- ./demo_clean/src/main.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/main.cpp	2023-03-05 23:22:10.772150300 +0000
+@@ -1,22 +1,166 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+  * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+  */
+ 
++#include <thread>
++#include <stdexcept>
++#include <sstream>
++
++#ifdef __cpp_lib_filesystem
++#include <filesystem>
++namespace fs = std::filesystem;
++#else
++#include <experimental/filesystem>
++namespace fs = std::experimental::filesystem;
++#endif
++
++
+ #include "LAppDelegate.hpp"
++#include "LAppLive2DManager.hpp"
++#include "facial_landmark_detector.h"
+ 
+-int main()
++struct CmdArgs
+ {
+-    // create the application instance
+-    if (LAppDelegate::GetInstance()->Initialize() == GL_FALSE)
++    int windowWidth;
++    int windowHeight;
++    std::string windowTitle;
++    std::string rootDir;
++    float scaleFactor;
++    float translateX;
++    float translateY;
++    std::string modelName;
++    bool oldId; // If true, translate new (Cubism 3+) parameter IDs to old (Cubism 2.1) IDs
++    std::string cfgPath; // Path to config file for FacialLandmarkDetector
++};
++
++CmdArgs parseArgv(int argc, char *argv[])
++{
++    // I think the command-line args are simple enough to not justify using a library...
++    CmdArgs cmdArgs;
++    // Set default values
++    cmdArgs.windowWidth = 600;
++    cmdArgs.windowHeight = 600;
++    cmdArgs.windowTitle = "FacialLandmarksForCubism example";
++    cmdArgs.rootDir = fs::current_path().string();
++    cmdArgs.scaleFactor = 4.5f;
++    cmdArgs.translateX = 0.0f;
++    cmdArgs.translateY = -3.1f;
++    cmdArgs.modelName = "Haru";
++    cmdArgs.oldId = false;
++    cmdArgs.cfgPath = "";
++
++    int i = 1;
++    while (i < argc)
+     {
+-        return 1;
++        std::string arg = argv[i];
++        std::stringstream ss;
++
++        if (arg == "--window-width" || arg == "-W") // capital W for consistency with height
++        {
++            ss << argv[i + 1];
++            if (!(ss >> cmdArgs.windowWidth))
++            {
++                throw std::runtime_error("Invalid argument for window width");
++            }
++        }
++        else if (arg == "--window-height" || arg == "-H") // avoiding "-h", typically for help
++        {
++            ss << argv[i + 1];
++            if (!(ss >> cmdArgs.windowHeight))
++            {
++                throw std::runtime_error("Invalid argument for window height");
++            }
++        }
++        else if (arg == "--window-title" || arg == "-t")
++        {
++            cmdArgs.windowTitle = argv[i + 1];
++        }
++        else if (arg == "--root-dir" || arg == "-d")
++        {
++            cmdArgs.rootDir = argv[i + 1];
++        }
++        else if (arg == "--scale-factor" || arg == "-f")
++        {
++            ss << argv[i + 1];
++            if (!(ss >> cmdArgs.scaleFactor))
++            {
++                throw std::runtime_error("Invalid argument for scale factor");
++            }
++        }
++        else if (arg == "--translate-x" || arg == "-x")
++        {
++            ss << argv[i + 1];
++            if (!(ss >> cmdArgs.translateX))
++            {
++                throw std::runtime_error("Invalid argument for translate X");
++            }
++        }
++        else if (arg == "--translate-y" || arg == "-y")
++        {
++            ss << argv[i + 1];
++            if (!(ss >> cmdArgs.translateY))
++            {
++                throw std::runtime_error("Invalid argument for translate Y");
++            }
++        }
++        else if (arg == "--model" || arg == "-m")
++        {
++            cmdArgs.modelName = argv[i + 1];
++        }
++        else if (arg == "--config" || arg == "-c")
++        {
++            cmdArgs.cfgPath = argv[i + 1];
++        }
++        else if (arg == "--old-param-id" || arg == "-o")
++        {
++            cmdArgs.oldId = (argv[i + 1][0] == '1');
++        }
++        else
++        {
++            throw std::runtime_error("Unrecognized argument: " + arg);
++        }
++
++        i += 2;
+     }
+ 
+-    LAppDelegate::GetInstance()->Run();
++    return cmdArgs;
++}
++
++int main(int argc, char* argv[])
++{
++    auto cmdArgs = parseArgv(argc, argv);
++
++    LAppDelegate *delegate = LAppDelegate::GetInstance();
++
++    if (!delegate->Initialize(cmdArgs.windowWidth,
++                              cmdArgs.windowHeight,
++                              cmdArgs.windowTitle.c_str()))
++    {
++        throw std::runtime_error("Unable to initialize LAppDelegate");
++    }
++
++    delegate->SetRootDirectory(cmdArgs.rootDir);
++
++    FacialLandmarkDetector detector(cmdArgs.cfgPath);
++
++    std::thread detectorThread(&FacialLandmarkDetector::mainLoop,
++                               &detector);
++
++    LAppLive2DManager *manager = LAppLive2DManager::GetInstance();
++    manager->SetModel(cmdArgs.modelName, cmdArgs.oldId);
++
++    manager->SetProjectionScaleTranslate(cmdArgs.scaleFactor,
++                                         cmdArgs.translateX,
++                                         cmdArgs.translateY);
++    manager->SetFacialLandmarkDetector(&detector);
++
++    delegate->Run();
++
++    detector.stop();
++    detectorThread.join();
+ 
+     return 0;
+ }
+-
+diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainMinimum.cpp
+--- ./demo_clean/src/mainMinimum.cpp	2023-02-20 11:39:40.000000000 +0000
++++ ./demo_dev/src/mainMinimum.cpp	2023-03-05 23:22:10.854990900 +0000
+@@ -1,4 +1,4 @@
+-﻿/**
++/**
+  * Copyright(c) Live2D Inc. All rights reserved.
+  *
+  * Use of this source code is governed by the Live2D Open Software license
+@@ -7,7 +7,8 @@
+ 
+ #include <functional>
+ 
+-#include <stb_image.h>
++#include <sstream>
++#include <unistd.h>
+ #include <GL/glew.h>
+ #include <GLFW/glfw3.h>
+ 
+@@ -15,19 +16,15 @@
+ #include "LAppAllocator.hpp"
+ #include "LAppTextureManager.hpp"
+ #include "LAppPal.hpp"
+-#include "TouchManager.hpp"
+ #include "CubismUserModelExtend.hpp"
+-#include "CubismSampleViewMatrix.hpp"
+ #include "MouseActionManager.hpp"
+ 
+ #include <CubismFramework.hpp>
+-#include <CubismDefaultParameterId.hpp>
+ #include <CubismModelSettingJson.hpp>
+ #include <Model/CubismUserModel.hpp>
+ #include <Physics/CubismPhysics.hpp>
+ #include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
+ #include <Utils/CubismString.hpp>
+-#include <Math/CubismViewMatrix.hpp>
+ 
+ /**
+ *@brief モデルデータのディレクトリ名
+@@ -36,8 +33,6 @@
+ static const Csm::csmChar* _modelDirectoryName = "Hiyori";
+ 
+ static Csm::CubismUserModel* _userModel; ///< ユーザーが実際に使用するモデル
+-static Csm::CubismModelSettingJson* _modelJson; ///< モデルの設定情報
+-static Csm::CubismModel* _model; ///< Mocデータから作成されるモデルデータ
+ 
+ Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
+ Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds; ///< モデルに設定されたまばたき機能用パラメータID
+@@ -66,8 +61,8 @@ static LAppAllocator _cubismAllocator; /
+ 
+ static LAppTextureManager* _textureManager; ///< テクスチャの管理
+ 
++static std::string _rootDirectory; ///< ルートディレクトリ
+ static std::string _currentModelDirectory; ///< 現在のモデルのディレクトリ名
+-const Csm::csmChar* _currentModelDirectoryChar; ///< 現在のモデルのディレクトリ名のconst csmCharポインタ型
+ 
+ static GLFWwindow* _window; ///< ウィンドウオブジェクト
+ 
+@@ -90,6 +85,59 @@ static void InitializeCubism()
+ }
+ 
+ /**
++* @brief 文字列の分割
++*
++* 指定された区切り文字で文字列を分割する
++*/
++Csm::csmVector<std::string> Split(const std::string& baseString, char delimiter)
++{
++    Csm::csmVector < std::string > elems;
++    std::stringstream ss(baseString);
++    std::string item;
++
++    while (getline(ss, item, delimiter))
++    {
++        if (!item.empty())
++        {
++            elems.PushBack(item);
++        }
++    }
++
++    return elems;
++}
++
++/**
++* @brief ルートディレクトリの設定
++*
++* Linuxのルートディレクトリを確認し、パスを取得する
++*/
++void SetRootDirectory()
++{
++    const int maximumPathBufferSize = 1024;
++    char path[maximumPathBufferSize];
++    ssize_t len = readlink("/proc/self/exe", path, maximumPathBufferSize - 1);
++
++    if (len != -1)
++    {
++        path[len] = '\0';
++    }
++
++    std::string pathString(path);
++
++    pathString = pathString.substr(0, pathString.rfind("Demo"));
++    Csm::csmVector<std::string> splitStrings = Split(pathString, '/');
++
++    _rootDirectory = "";
++
++    for (int i = 0; i < splitStrings.GetSize(); i++)
++    {
++        _rootDirectory += "/" + splitStrings[i];
++    }
++
++    _rootDirectory += "/";
++}
++
++/**
+ * @brief システムの初期化
+ *
+ * 基盤システムの初期化処理を行う
+@@ -149,6 +197,8 @@ static bool InitializeSystem()
+     // ドラッグ入力管理クラスの初期化
+     MouseActionManager::GetInstance()->Initialize(windowWidth, windowHeight);
+ 
++    SetRootDirectory();
++
+     return GL_TRUE;
+ }
+ 
+@@ -182,16 +232,6 @@ void Release()
+ }
+ 
+ /**
+-* @brief ディレクトリパスの設定
+-*
+-* モデルのディレクトリパスを設定する
+-*/
+-void SetAssetDirectory(const std::string& path)
+-{
+-    _currentModelDirectory = path;
+-}
+-
+-/**
+ * @brief モデルの読み込み
+ *
+ * モデルデータの読み込み処理を行う
+@@ -201,13 +241,15 @@ void SetAssetDirectory(const std::string
+ void LoadModel(const std::string modelDirectoryName)
+ {
+     // モデルのディレクトリを指定
+-    SetAssetDirectory(LAppDefine::ResourcesPath + modelDirectoryName + "/");
++    _currentModelDirectory = _rootDirectory + LAppDefine::ResourcesPath + modelDirectoryName + "/";
+ 
+     // モデルデータの新規生成
+     _userModel = new CubismUserModelExtend(modelDirectoryName, _currentModelDirectory);
+ 
+     // モデルデータの読み込み及び生成とセットアップを行う
+-    static_cast<CubismUserModelExtend*>(_userModel)->SetupModel();
++    std::string json = ".model3.json";
++    std::string fileName = _modelDirectoryName + json;
++    static_cast<CubismUserModelExtend*>(_userModel)->LoadAssets(fileName.c_str());
+ 
+     // ユーザーモデルをMouseActionManagerへ渡す
+     MouseActionManager::GetInstance()->SetUserModel(_userModel);

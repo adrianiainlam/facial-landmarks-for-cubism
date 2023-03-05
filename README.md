@@ -29,12 +29,8 @@ The main advantage is a much lower CPU load.
 
 ## Supporting environments
 
-This library was developed and tested only on Ubuntu 18.04 using GCC 7.5.0.
-
-Currently it only supports Unix-like environments, as I am using
-`<sys/socket.h>` etc to communicate with OpenSeeFace. If there is demand
-for it, I can try to make it work on Windows as well (contributions
-welcome).
+This library was tested on Ubuntu 18.04 using GCC 7.5.0, and on
+Windows 10 using Visual Studio 2019.
 
 The library should only require C++11. The Cubism
 SDK requires C++14. I have made use of one C++17 library (`<filesystem>`)
@@ -48,12 +44,20 @@ if you don't have C++17 support.
 
 2. Install dependencies.
 
+   On Linux:
+
    You will require a recent C/C++ compiler, `make`, `patch`, and CMake >= 3.16. To compile the example
    program you will also require the OpenGL library (and its dev headers)
    among other libraries required for the example program. The libraries I
    had to install on Ubuntu 18.04 (this list may not be exhaustive) are:
 
        libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+
+   On Windows:
+
+   You will need a recent C/C++ compiler (I've tested Visual Studio 2019),
+   `patch`, CMake >= 3.16, and a `sh` shell (Git Bash works fine). I did not
+   need to install any other library, but I have not tested on a clean machine.
 
 3. Clone this repository
 
@@ -86,6 +90,12 @@ To build the example program:
 
        ./build.sh
 
+   On Linux, the build should be complete after running this script.
+   On Windows, you will also need to go into "./demo_build/scripts"
+   and run one of the scripts corresponding to your MSVC version.
+   The script will ask for your configurations. I've tried "1 2 1"
+   which works fine for me.
+
 8. Now try running the example program.
 
    First, (in a separate terminal) go to where you have downloaded
@@ -97,6 +107,7 @@ To build the example program:
    Please feel free to explore other options provided by OSF.
 
    Back to the original terminal, from the "example" directory:
+   (for Windows, replace "make_gcc" with your MSVC version)
 
        cd ./demo_build/build/make_gcc/bin/Demo/
        ./Demo
@@ -184,3 +195,4 @@ really have many environments / faces to test it on. Feel free to submit
 issues or pull requests on GitHub, or send questions or patches to me
 (see my email address above) if you prefer email. Thanks :)
 
+Special thanks to GitHub user @Arkueid for adding Windows support!

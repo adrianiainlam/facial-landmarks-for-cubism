@@ -6,7 +6,7 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  set(APP_NAME Demo)
  # Set directory paths.
 -set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-+set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-4-r.6.1)
++set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-4-r.6.2)
  set(CORE_PATH ${SDK_ROOT_PATH}/Core)
  set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/Framework)
  set(THIRD_PARTY_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/thirdParty)

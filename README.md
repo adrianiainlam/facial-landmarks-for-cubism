@@ -71,17 +71,17 @@ if you don't have C++17 support.
 
 To build the example program:
 
-5. Download "Cubism 4 SDK for Native R6.1" from the Live2D website:
+5. Download "Cubism 4 SDK for Native R6.2" from the Live2D website:
    <https://www.live2d.com/en/download/cubism-sdk/download-native/>.
 
-   Extract the archive -- put the "CubismSdkForNative-4-r.6.1" folder under
+   Extract the archive -- put the "CubismSdkForNative-4-r.6.2" folder under
    the "example" folder of this repo.
 
    Note: The Cubism SDK is the property of Live2D and is not part of this
    project. You must agree to Live2D's license agreements to use it.
 
 6. Go into the
-   "example/CubismSdkForNative-4-r.6.1/Samples/OpenGL/thirdParty/scripts"
+   "example/CubismSdkForNative-4-r.6.2/Samples/OpenGL/thirdParty/scripts"
    directory and run
 
        ./setup_glew_glfw

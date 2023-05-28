@@ -1,12 +1,12 @@
 diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
---- ./demo_clean/CMakeLists.txt	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/CMakeLists.txt	2023-03-05 23:22:10.756801200 +0000
+--- ./demo_clean/CMakeLists.txt	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/CMakeLists.txt	2023-05-28 08:28:27.492813451 +0100
 @@ -9,7 +9,7 @@ option(
  # Set app name.
  set(APP_NAME Demo)
  # Set directory paths.
 -set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-+set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-4-r.6.2)
++set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-4-r.7)
  set(CORE_PATH ${SDK_ROOT_PATH}/Core)
  set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/Framework)
  set(THIRD_PARTY_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/thirdParty)
@@ -46,8 +46,8 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  target_compile_options(${APP_NAME} PRIVATE /MP)
  
 diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeLists.txt
---- ./demo_clean/src/CMakeLists.txt	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/CMakeLists.txt	2023-03-05 23:22:10.976777100 +0000
+--- ./demo_clean/src/CMakeLists.txt	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/CMakeLists.txt	2023-05-28 08:28:27.492813451 +0100
 @@ -1,49 +1,22 @@
 -if (CSM_MINIMUM_DEMO)
 -  target_sources(${APP_NAME}
@@ -112,8 +112,8 @@ diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeL
 +    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 +)
 diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev/src/CubismUserModelExtend.cpp
---- ./demo_clean/src/CubismUserModelExtend.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/CubismUserModelExtend.cpp	2023-03-05 23:22:10.780128700 +0000
+--- ./demo_clean/src/CubismUserModelExtend.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/CubismUserModelExtend.cpp	2023-05-28 08:28:27.492813451 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -301,8 +301,8 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
      if (_physics)
      {
 diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev/src/CubismUserModelExtend.hpp
---- ./demo_clean/src/CubismUserModelExtend.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/CubismUserModelExtend.hpp	2023-03-05 23:22:10.986750400 +0000
+--- ./demo_clean/src/CubismUserModelExtend.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/CubismUserModelExtend.hpp	2023-05-28 08:28:27.492813451 +0100
 @@ -27,17 +27,13 @@ class CubismUserModelExtend :
  {
  public:
@@ -372,8 +372,8 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev
  
      /**
 diff -pruN --exclude build ./demo_clean/src/LAppAllocator.cpp ./demo_dev/src/LAppAllocator.cpp
---- ./demo_clean/src/LAppAllocator.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppAllocator.cpp	2023-03-05 23:22:10.847976000 +0000
+--- ./demo_clean/src/LAppAllocator.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppAllocator.cpp	2023-05-28 08:28:27.492813451 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -390,8 +390,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppAllocator.cpp ./demo_dev/src/LAp
      return malloc(size);
  }
 diff -pruN --exclude build ./demo_clean/src/LAppAllocator.hpp ./demo_dev/src/LAppAllocator.hpp
---- ./demo_clean/src/LAppAllocator.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppAllocator.hpp	2023-03-05 23:22:10.953083600 +0000
+--- ./demo_clean/src/LAppAllocator.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppAllocator.hpp	2023-05-28 08:28:27.492813451 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -399,8 +399,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppAllocator.hpp ./demo_dev/src/LAp
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDefine.cpp
---- ./demo_clean/src/LAppDefine.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppDefine.cpp	2023-03-05 23:22:10.995458800 +0000
+--- ./demo_clean/src/LAppDefine.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppDefine.cpp	2023-05-28 08:28:27.496813523 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -417,8 +417,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDe
      const csmFloat32 ViewLogicalMaxLeft = -2.0f;
      const csmFloat32 ViewLogicalMaxRight = 2.0f;
 diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDefine.hpp
---- ./demo_clean/src/LAppDefine.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppDefine.hpp	2023-03-05 23:22:10.947784100 +0000
+--- ./demo_clean/src/LAppDefine.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppDefine.hpp	2023-05-28 08:28:27.496813523 +0100
 @@ -1,9 +1,10 @@
 -﻿/**
 +/**
@@ -432,8 +432,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDe
  
  #include <CubismFramework.hpp>
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LAppDelegate.cpp
---- ./demo_clean/src/LAppDelegate.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppDelegate.cpp	2023-03-05 23:22:10.975780100 +0000
+--- ./demo_clean/src/LAppDelegate.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppDelegate.cpp	2023-05-28 08:28:27.496813523 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -662,8 +662,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
 +    return elems;
  }
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LAppDelegate.hpp
---- ./demo_clean/src/LAppDelegate.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppDelegate.hpp	2023-03-05 23:22:10.789104800 +0000
+--- ./demo_clean/src/LAppDelegate.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppDelegate.hpp	2023-05-28 08:28:27.496813523 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -802,8 +802,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
 -
 -};
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src/LAppLive2DManager.cpp
---- ./demo_clean/src/LAppLive2DManager.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppLive2DManager.cpp	2023-03-05 23:22:10.967799000 +0000
+--- ./demo_clean/src/LAppLive2DManager.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppLive2DManager.cpp	2023-05-28 08:28:27.496813523 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -984,8 +984,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 +    _translateY = translateY;
 +}
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src/LAppLive2DManager.hpp
---- ./demo_clean/src/LAppLive2DManager.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppLive2DManager.hpp	2023-03-05 23:22:10.829032000 +0000
+--- ./demo_clean/src/LAppLive2DManager.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppLive2DManager.hpp	2023-05-28 08:28:27.496813523 +0100
 @@ -1,18 +1,20 @@
 -﻿/**
 +/**
@@ -1070,8 +1070,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
 +    float _translateY;
  };
 diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppModel.cpp
---- ./demo_clean/src/LAppModel.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppModel.cpp	2023-03-05 23:22:10.797100200 +0000
+--- ./demo_clean/src/LAppModel.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppModel.cpp	2023-05-28 08:34:09.047010843 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1087,7 +1087,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  using namespace Live2D::Cubism::Framework;
  using namespace Live2D::Cubism::Framework::DefaultParameterId;
  using namespace LAppDefine;
-@@ -45,22 +47,24 @@ namespace {
+@@ -45,10 +47,12 @@ namespace {
      }
  }
  
@@ -1099,8 +1099,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 +    , _detector(nullptr)
 +    , _useOldParamId(useOldParamId)
  {
-     if (DebugLogEnable)
+     if (MocConsistencyValidationEnable)
      {
+@@ -60,12 +64,12 @@ LAppModel::LAppModel()
          _debugMode = true;
      }
  
@@ -1119,7 +1120,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  }
  
  LAppModel::~LAppModel()
-@@ -96,12 +100,6 @@ void LAppModel::LoadAssets(const csmChar
+@@ -101,12 +105,6 @@ void LAppModel::LoadAssets(const csmChar
  
      SetupModel(setting);
  
@@ -1132,7 +1133,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      CreateRenderer();
  
      SetupTextures();
-@@ -134,30 +132,6 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -138,30 +136,6 @@ void LAppModel::SetupModel(ICubismModelS
          DeleteBuffer(buffer, path.GetRawString());
      }
  
@@ -1163,7 +1164,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Physics
      if (strcmp(_modelSetting->GetPhysicsFileName(), "") != 0)
      {
-@@ -196,7 +170,7 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -200,7 +174,7 @@ void LAppModel::SetupModel(ICubismModelS
          breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
          breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
          breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamBodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
@@ -1172,7 +1173,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  
          _breath->SetParameters(breathParameters);
      }
-@@ -220,21 +194,6 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -224,21 +198,6 @@ void LAppModel::SetupModel(ICubismModelS
          }
      }
  
@@ -1194,7 +1195,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Layout
      csmMap<csmString, csmFloat32> layout;
      _modelSetting->GetLayoutMap(layout);
-@@ -347,59 +306,57 @@ void LAppModel::Update()
+@@ -351,62 +310,57 @@ void LAppModel::Update()
      const csmFloat32 deltaTimeSeconds = LAppPal::GetDeltaTime();
      _userTimeSeconds += deltaTimeSeconds;
  
@@ -1208,13 +1209,13 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 -    //-----------------------------------------------------------------
 -    _model->LoadParameters(); // 前回セーブされた状態をロード
 -    if (_motionManager->IsFinished())
-+    if (_detector)
-     {
+-    {
 -        // モーションの再生がない場合、待機モーションの中からランダムで再生する
 -        StartRandomMotion(MotionGroupIdle, PriorityIdle);
 -    }
 -    else
--    {
++    if (_detector)
+     {
 -        motionUpdated = _motionManager->UpdateMotion(_model, deltaTimeSeconds); // モーションを更新
 -    }
 -    _model->SaveParameters(); // 状態を保存
@@ -1222,6 +1223,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 +        auto idMan = CubismFramework::GetIdManager();
 +        auto params = _detector->getParams();
  
+-    // 不透明度
+-    _opacity = _model->GetModelOpacity();
+-
 -    // まばたき
 -    if (!motionUpdated)
 -    {
@@ -1299,7 +1303,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      // 物理演算の設定
-@@ -408,22 +365,6 @@ void LAppModel::Update()
+@@ -415,22 +369,6 @@ void LAppModel::Update()
          _physics->Evaluate(_model, deltaTimeSeconds);
      }
  
@@ -1322,7 +1326,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      // ポーズの設定
      if (_pose != NULL)
      {
-@@ -492,7 +433,6 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -499,7 +437,6 @@ CubismMotionQueueEntryHandle LAppModel::
      {
          csmString path = voice;
          path = _modelHomeDir + path;
@@ -1330,9 +1334,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      if (_debugMode)
-@@ -644,3 +584,37 @@ Csm::Rendering::CubismOffscreenFrame_Ope
- {
-     return _renderBuffer;
+@@ -678,3 +615,37 @@ csmBool LAppModel::HasMocConsistencyFrom
+ 
+     return consistency;
  }
 +
 +void LAppModel::SetFacialLandmarkDetector(FacialLandmarkDetector *detector)
@@ -1369,8 +1373,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 +}
 +
 diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppModel.hpp
---- ./demo_clean/src/LAppModel.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppModel.hpp	2023-03-05 23:22:10.907889300 +0000
+--- ./demo_clean/src/LAppModel.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppModel.hpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1399,9 +1403,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  
      /**
       * @brief デストラクタ
-@@ -114,6 +117,13 @@ public:
+@@ -122,6 +125,13 @@ public:
       */
-     Csm::Rendering::CubismOffscreenFrame_OpenGLES2& GetRenderBuffer();
+     Csm::csmBool HasMocConsistencyFromFile(const Csm::csmChar* mocFileName);
  
 +    /**
 +     * @brief Set the pointer to the FacialLandmarkDetector instance
@@ -1413,7 +1417,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  protected:
      /**
       *  @brief  モデルを描画する処理。モデルを描画する空間のView-Projection行列を渡す。
-@@ -167,6 +177,17 @@ private:
+@@ -175,6 +185,17 @@ private:
      */
      void ReleaseExpressions();
  
@@ -1431,7 +1435,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
      Csm::ICubismModelSetting* _modelSetting; ///< モデルセッティング情報
      Csm::csmString _modelHomeDir; ///< モデルセッティングが置かれたディレクトリ
      Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
-@@ -183,9 +204,9 @@ private:
+@@ -191,9 +212,9 @@ private:
      const Csm::CubismId* _idParamEyeBallX; ///< パラメータID: ParamEyeBallX
      const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
  
@@ -1444,8 +1448,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  
  
 diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.cpp
---- ./demo_clean/src/LAppPal.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppPal.cpp	2023-03-05 23:22:10.834981800 +0000
+--- ./demo_clean/src/LAppPal.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppPal.cpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1499,8 +1503,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
  }
  
 diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.hpp
---- ./demo_clean/src/LAppPal.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppPal.hpp	2023-03-05 23:22:10.939820800 +0000
+--- ./demo_clean/src/LAppPal.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppPal.hpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1516,8 +1520,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
  
  /**
 diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSprite.cpp
---- ./demo_clean/src/LAppSprite.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppSprite.cpp	2023-03-05 23:22:10.900085700 +0000
+--- ./demo_clean/src/LAppSprite.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppSprite.cpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1571,8 +1575,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
      float y = maxHeight - pointY;
  
 diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSprite.hpp
---- ./demo_clean/src/LAppSprite.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppSprite.hpp	2023-03-05 23:22:10.876156000 +0000
+--- ./demo_clean/src/LAppSprite.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppSprite.hpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1600,8 +1604,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSp
      int _uvLocation;        ///< UVアトリビュート
      int _textureLocation;   ///< テクスチャアトリビュート
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/src/LAppTextureManager.cpp
---- ./demo_clean/src/LAppTextureManager.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppTextureManager.cpp	2023-03-05 23:22:10.765166600 +0000
+--- ./demo_clean/src/LAppTextureManager.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppTextureManager.cpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1671,8 +1675,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
  {
      for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/src/LAppTextureManager.hpp
---- ./demo_clean/src/LAppTextureManager.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppTextureManager.hpp	2023-03-05 23:22:10.822016600 +0000
+--- ./demo_clean/src/LAppTextureManager.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppTextureManager.hpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1702,8 +1706,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/sr
  
  private:
 diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView.cpp
---- ./demo_clean/src/LAppView.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppView.cpp	2023-03-05 23:22:10.804064800 +0000
+--- ./demo_clean/src/LAppView.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppView.cpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -1781,10 +1785,10 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -        for (csmUint32 i = 0; i < Live2DManager->GetModelNum(); i++)
 +        for(csmUint32 i=0; i<Live2DManager->GetModelNum(); i++)
          {
-             float alpha = GetSpriteAlpha(i); // サンプルとしてαに適当な差をつける
-             _renderSprite->SetColor(1.0f, 1.0f, 1.0f, alpha);
+             LAppModel* model = Live2DManager->GetModel(i);
+             float alpha = i < 1 ? 1.0f : model->GetOpacity(); // 片方のみ不透明度を取得できるようにする
 @@ -133,7 +126,7 @@ void LAppView::Render()
-             LAppModel *model = Live2DManager->GetModel(i);
+ 
              if (model)
              {
 -                _renderSprite->RenderImmidiate( model->GetRenderBuffer().GetColorBuffer(), uvVertex);
@@ -1953,8 +1957,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -    }
  }
 diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView.hpp
---- ./demo_clean/src/LAppView.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/LAppView.hpp	2023-03-05 23:22:10.892081200 +0000
+--- ./demo_clean/src/LAppView.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/LAppView.hpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -2041,8 +2045,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
      SelectTarget _renderTarget;     ///< レンダリング先の選択肢
      float _clearColor[4];           ///< レンダリングターゲットのクリアカラー
 diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/src/MouseActionManager.cpp
---- ./demo_clean/src/MouseActionManager.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/MouseActionManager.cpp	2023-03-05 23:22:10.841970900 +0000
+--- ./demo_clean/src/MouseActionManager.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/MouseActionManager.cpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,9 +1,9 @@
 -﻿/**
 - * Copyright(c) Live2D Inc. All rights reserved.
@@ -2104,8 +2108,8 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/sr
  }
  
 diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/src/MouseActionManager.hpp
---- ./demo_clean/src/MouseActionManager.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/MouseActionManager.hpp	2023-03-05 23:22:10.961094400 +0000
+--- ./demo_clean/src/MouseActionManager.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/MouseActionManager.hpp	2023-05-28 08:28:27.500813596 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -2113,8 +2117,8 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/sr
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/TouchManager.cpp ./demo_dev/src/TouchManager.cpp
---- ./demo_clean/src/TouchManager.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/TouchManager.cpp	2023-03-05 23:22:10.861957900 +0000
+--- ./demo_clean/src/TouchManager.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/TouchManager.cpp	2023-05-28 08:28:27.504813669 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -2122,8 +2126,8 @@ diff -pruN --exclude build ./demo_clean/src/TouchManager.cpp ./demo_dev/src/Touc
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/TouchManager.hpp ./demo_dev/src/TouchManager.hpp
---- ./demo_clean/src/TouchManager.hpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/TouchManager.hpp	2023-03-05 23:22:10.884102300 +0000
+--- ./demo_clean/src/TouchManager.hpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/TouchManager.hpp	2023-05-28 08:28:27.504813669 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**
@@ -2131,8 +2135,8 @@ diff -pruN --exclude build ./demo_clean/src/TouchManager.hpp ./demo_dev/src/Touc
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
---- ./demo_clean/src/main.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/main.cpp	2023-03-05 23:22:10.772150300 +0000
+--- ./demo_clean/src/main.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/main.cpp	2023-05-28 08:28:27.504813669 +0100
 @@ -1,22 +1,166 @@
 -﻿/**
 +/**
@@ -2308,8 +2312,8 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
  }
 -
 diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainMinimum.cpp
---- ./demo_clean/src/mainMinimum.cpp	2023-02-20 11:39:40.000000000 +0000
-+++ ./demo_dev/src/mainMinimum.cpp	2023-03-05 23:22:10.854990900 +0000
+--- ./demo_clean/src/mainMinimum.cpp	2023-05-18 09:58:50.000000000 +0100
++++ ./demo_dev/src/mainMinimum.cpp	2023-05-28 08:28:27.504813669 +0100
 @@ -1,4 +1,4 @@
 -﻿/**
 +/**

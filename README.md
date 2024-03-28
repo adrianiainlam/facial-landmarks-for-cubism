@@ -71,17 +71,17 @@ if you don't have C++17 support.
 
 To build the example program:
 
-5. Download "Cubism 4 SDK for Native R7" from the Live2D website:
+5. Download "Cubism 5 SDK for Native R1" from the Live2D website:
    <https://www.live2d.com/en/download/cubism-sdk/download-native/>.
 
-   Extract the archive -- put the "CubismSdkForNative-4-r.7" folder under
+   Extract the archive -- put the "CubismSdkForNative-5-r.1" folder under
    the "example" folder of this repo.
 
    Note: The Cubism SDK is the property of Live2D and is not part of this
    project. You must agree to Live2D's license agreements to use it.
 
 6. Go into the
-   "example/CubismSdkForNative-4-r.7/Samples/OpenGL/thirdParty/scripts"
+   "example/CubismSdkForNative-5-r.1/Samples/OpenGL/thirdParty/scripts"
    directory and run
 
        ./setup_glew_glfw
@@ -101,7 +101,7 @@ To build the example program:
    First, (in a separate terminal) go to where you have downloaded
    OpenSeeFace, and run
 
-       ./python3 ./facetracker.py -v 4 --model 3 -M
+       python3 ./facetracker.py -v 4 --model 3 -M
 
    I tried models 3 and 4, and I think both work reasonably well.
    Please feel free to explore other options provided by OSF.

@@ -1,5 +1,5 @@
 build
-example/CubismSdkForNative-4-r.*/
+example/CubismSdkForNative-*-r.*/
 example/demo_build/
 example/demo_clean/
 example/demo_dev/

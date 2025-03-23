@@ -1,16 +1,24 @@
 diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
---- ./demo_clean/CMakeLists.txt	2024-03-28 18:19:03.168248400 +0000
-+++ ./demo_dev/CMakeLists.txt	2024-03-28 18:23:33.549413300 +0000
+--- ./demo_clean/CMakeLists.txt	2025-03-23 03:36:37.047279100 +0000
++++ ./demo_dev/CMakeLists.txt	2025-03-23 03:37:32.320173600 +0000
 @@ -9,7 +9,7 @@ option(
  # Set app name.
  set(APP_NAME Demo)
  # Set directory paths.
 -set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-+set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-5-r.1)
++set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-5-r.3)
  set(CORE_PATH ${SDK_ROOT_PATH}/Core)
  set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/Framework)
  set(THIRD_PARTY_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/thirdParty)
-@@ -41,7 +41,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE
+@@ -17,7 +17,6 @@ set(STB_PATH ${THIRD_PARTY_PATH}/stb)
+ set(GLEW_PATH ${THIRD_PARTY_PATH}/glew)
+ set(GLFW_PATH ${THIRD_PARTY_PATH}/glfw)
+ set(RES_PATH ${SDK_ROOT_PATH}/Samples/Resources)
+-set(SAMPLE_SHADER_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/Shaders/Standard)
+ 
+ # Set project.
+ project(${APP_NAME})
+@@ -42,7 +41,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE
  set(BUILD_UTILS OFF CACHE BOOL "" FORCE)
  
  # Specify version of compiler.
@@ -19,7 +27,28 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  set(CMAKE_CXX_STANDARD_REQUIRED ON)
  set(CMAKE_CXX_EXTENSIONS OFF)
  
-@@ -113,6 +113,9 @@ target_link_libraries(Framework Live2DCu
+@@ -55,7 +54,10 @@ else()
+   message(FATAL_ERROR "[${APP_NAME}] Invalid linker flag ${CMAKE_EXE_LINKER_FLAGS}.")
+ endif()
+ # Detect compiler.
+-if(MSVC_VERSION MATCHES 1900)
++if(MSVC_VERSION MATCHES 1800)
++  # Visual Studio 2013
++  set(COMPILER 120)
++elseif(MSVC_VERSION MATCHES 1900)
+   # Visual Studio 2015
+   set(COMPILER 140)
+ elseif(MSVC_VERSION GREATER_EQUAL 1910 AND MSVC_VERSION LESS 1920)
+@@ -64,7 +66,7 @@ elseif(MSVC_VERSION GREATER_EQUAL 1910 A
+ elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1930)
+   # Visual Studio 2019
+   set(COMPILER 142)
+-elseif(MSVC_VERSION GREATER_EQUAL 1930 AND MSVC_VERSION LESS 1950)
++elseif(MSVC_VERSION GREATER_EQUAL 1930 AND MSVC_VERSION LESS 1940)
+   # Visual Studio 2022
+   set(COMPILER 143)
+ elseif(MSVC)
+@@ -111,22 +113,26 @@ target_link_libraries(Framework Live2DCu
  # Find opengl libraries.
  find_package(OpenGL REQUIRED)
  
@@ -29,7 +58,10 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  # Make executable app.
  add_executable(${APP_NAME})
  # Add source files.
-@@ -122,12 +125,14 @@ target_link_libraries(${APP_NAME}
+ add_subdirectory(src)
+-
+ # Link libraries to app.
+ target_link_libraries(${APP_NAME}
    Framework
    glfw
    ${OPENGL_LIBRARIES}
@@ -45,10 +77,58 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  # Build in multi-process.
  target_compile_options(${APP_NAME} PRIVATE /MP)
  
+@@ -134,8 +140,9 @@ target_compile_options(${APP_NAME} PRIVA
+ add_custom_command(
+   TARGET ${APP_NAME}
+   POST_BUILD
+-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RES_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/Resources
+-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${SAMPLE_SHADER_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/SampleShaders
++  COMMAND
++    ${CMAKE_COMMAND} -E
++      copy_directory ${RES_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/Resources
+ )
+ 
+ # Set project properties.
+diff -pruN --exclude build ./demo_clean/scripts/nmake_msvc2013.bat ./demo_dev/scripts/nmake_msvc2013.bat
+--- ./demo_clean/scripts/nmake_msvc2013.bat	1970-01-01 00:00:00.000000000 +0000
++++ ./demo_dev/scripts/nmake_msvc2013.bat	2023-03-05 23:22:11.000449600 +0000
+@@ -0,0 +1,14 @@
++@echo off
++
++setlocal
++
++set SCRIPT_PATH=%~dp0
++set MSVC_VERSION=2013
++set MSVC_NUMBER=12
++set VCVARSALL=%VS120COMNTOOLS%..\..\VC\vcvarsall.bat
++set GENERATOR=nmake
++
++call "%SCRIPT_PATH%_msvc_common.bat"
++if %errorlevel% neq 0 pause & exit /b %errorlevel%
++
++pause & exit /b 0
+diff -pruN --exclude build ./demo_clean/scripts/proj_msvc2013.bat ./demo_dev/scripts/proj_msvc2013.bat
+--- ./demo_clean/scripts/proj_msvc2013.bat	1970-01-01 00:00:00.000000000 +0000
++++ ./demo_dev/scripts/proj_msvc2013.bat	2023-03-05 23:22:10.998452600 +0000
+@@ -0,0 +1,14 @@
++@echo off
++
++setlocal
++
++set SCRIPT_PATH=%~dp0
++set MSVC_VERSION=2013
++set MSVC_NUMBER=12
++set VCVARSALL=%VS120COMNTOOLS%..\..\VC\vcvarsall.bat
++set GENERATOR=proj
++
++call "%SCRIPT_PATH%_msvc_common.bat"
++if %errorlevel% neq 0 pause & exit /b %errorlevel%
++
++pause & exit /b 0
 diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeLists.txt
---- ./demo_clean/src/CMakeLists.txt	2024-03-28 18:19:03.998153300 +0000
+--- ./demo_clean/src/CMakeLists.txt	2025-03-23 03:36:38.235304800 +0000
 +++ ./demo_dev/src/CMakeLists.txt	2023-03-05 23:22:10.976777100 +0000
-@@ -1,49 +1,22 @@
+@@ -1,51 +1,22 @@
 -if (CSM_MINIMUM_DEMO)
 -  target_sources(${APP_NAME}
 +target_sources(${APP_NAME}
@@ -98,6 +178,8 @@ diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeL
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppPal.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppSprite.cpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppSprite.hpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppSpriteShader.cpp
+-      ${CMAKE_CURRENT_SOURCE_DIR}/LAppSpriteShader.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.cpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.cpp
@@ -112,7 +194,7 @@ diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeL
 +    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 +)
 diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev/src/CubismUserModelExtend.cpp
---- ./demo_clean/src/CubismUserModelExtend.cpp	2024-03-28 18:19:03.868189000 +0000
+--- ./demo_clean/src/CubismUserModelExtend.cpp	2025-03-23 03:36:38.046874500 +0000
 +++ ./demo_dev/src/CubismUserModelExtend.cpp	2023-03-05 23:22:10.780128700 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -134,18 +216,16 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  }
  
 -std::string CubismUserModelExtend::MakeAssetPath(const std::string& assetFileName)
-+void CubismUserModelExtend::LoadAssets(const Csm::csmChar* fileName)
- {
+-{
 -    return _currentModelDirectory + assetFileName;
 -}
 -
 -void CubismUserModelExtend::SetAssetDirectory(const std::string& path)
--{
++void CubismUserModelExtend::LoadAssets(const Csm::csmChar* fileName)
+ {
 -    _currentModelDirectory = path;
 -}
-+    csmSizeInt size;
-+    const csmString path = csmString(_currentModelDirectory.c_str()) + fileName;
- 
+-
 -void CubismUserModelExtend::LoadAsset(const std::string & fiileName, const std::function<void(Csm::csmByte*, Csm::csmSizeInt)>& afterLoadCallback)
 -{
 -    Csm::csmSizeInt bufferSize = 0;
@@ -155,13 +235,15 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
 -    {
 -        return;
 -    }
++    csmSizeInt size;
++    const csmString path = csmString(_currentModelDirectory.c_str()) + fileName;
+ 
+-    // バッファの設定
+-    buffer = LAppPal::LoadFileAsBytes(MakeAssetPath(fiileName).c_str(), &bufferSize);
 +    csmByte* buffer = CreateBuffer(path.GetRawString(), &size);
 +    _modelJson = new CubismModelSettingJson(buffer, size);
 +    DeleteBuffer(buffer, path.GetRawString());
  
--    // バッファの設定
--    buffer = LAppPal::LoadFileAsBytes(MakeAssetPath(fiileName).c_str(), &bufferSize);
--
 -    // コールバック関数の呼び出し
 -    afterLoadCallback(buffer, bufferSize);
 -
@@ -207,11 +289,11 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
 +            csmString name = _modelJson->GetExpressionName(i);
 +            csmString path = _modelJson->GetExpressionFileName(i);
 +            path = csmString(_currentModelDirectory.c_str()) + path;
- 
--            if (motion)
++
 +            buffer = CreateBuffer(path.GetRawString(), &size);
 +            ACubismMotion* motion = LoadExpression(buffer, size, name.GetRawString());
-+
+ 
+-            if (motion)
 +            if (_expressions[name])
              {
 -                if (_expressions[expressionName])
@@ -273,43 +355,34 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  
      // Layout
      csmMap<csmString, csmFloat32> layout;
-@@ -196,29 +210,26 @@ void CubismUserModelExtend::PreloadMotio
+@@ -194,17 +208,28 @@ void CubismUserModelExtend::PreloadMotio
+         csmSizeInt size;
+         buffer = CreateBuffer(path.GetRawString(), &size);
          // モーションデータの読み込み
-         CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString()));
+-        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString(), NULL, NULL, _modelJson, group, i));
++        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString()));
  
 -        if (tmpMotion)
 +        // フェードインの時間を取得
 +        csmFloat32 fadeTime = _modelJson->GetMotionFadeInTimeValue(group, i);
 +        if (fadeTime >= 0.0f)
          {
--            // フェードインの時間を取得
--            csmFloat32 fadeTime = _modelJson->GetMotionFadeInTimeValue(group, i);
--            if (fadeTime >= 0.0f)
--            {
--                tmpMotion->SetFadeInTime(fadeTime);
--            }
-+            tmpMotion->SetFadeInTime(fadeTime);
-+        }
- 
--            // フェードアウトの時間を取得
--            fadeTime = _modelJson->GetMotionFadeOutTimeValue(group, i);
--            if (fadeTime >= 0.0f)
--            {
--                tmpMotion->SetFadeOutTime(fadeTime);
--            }
-+        // フェードアウトの時間を取得
-+        fadeTime = _modelJson->GetMotionFadeOutTimeValue(group, i);
-+        if (fadeTime >= 0.0f)
-+        {
-+            tmpMotion->SetFadeOutTime(fadeTime);
-+        }
- 
 -            if (_motions[name])
 -            {
 -                // インスタンスを破棄
 -                ACubismMotion::Delete(_motions[name]);
 -            }
 -            _motions[name] = tmpMotion;
++            tmpMotion->SetFadeInTime(fadeTime);
++        }
++
++        // フェードアウトの時間を取得
++        fadeTime = _modelJson->GetMotionFadeOutTimeValue(group, i);
++        if (fadeTime >= 0.0f)
++        {
++            tmpMotion->SetFadeOutTime(fadeTime);
++        }
++
 +        if (_motions[name])
 +        {
 +            // インスタンスを破棄
@@ -319,43 +392,54 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  
          DeleteBuffer(buffer, path.GetRawString());
      }
-@@ -292,24 +303,21 @@ Csm::CubismMotionQueueEntryHandle Cubism
+@@ -237,9 +262,10 @@ void CubismUserModelExtend::ReleaseModel
+ * @param[in]   group                       モーショングループ名
+ * @param[in]   no                          グループ内の番号
+ * @param[in]   priority                    優先度
++* @param[in]   onFinishedMotionHandler     モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
+ * @return                                  開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」
+ */
+-Csm::CubismMotionQueueEntryHandle CubismUserModelExtend::StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority)
++Csm::CubismMotionQueueEntryHandle CubismUserModelExtend::StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler)
+ {
+     // モーション数が取得出来なかった、もしくは0の時
+     if (!(_modelJson->GetMotionCount(group)))
+@@ -275,16 +301,30 @@ Csm::CubismMotionQueueEntryHandle Cubism
+         csmSizeInt size;
+         buffer = CreateBuffer(path.GetRawString(), &size);
          // 一番先頭のモーションを読み込む
-         motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler));
+-        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, NULL, NULL, _modelJson, group, no));
++        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler));
  
 -        if (motion)
 +        csmFloat32 fadeTime = _modelJson->GetMotionFadeInTimeValue(group, no);
 +        if (fadeTime >= 0.0f)
          {
--            csmFloat32 fadeTime = _modelJson->GetMotionFadeInTimeValue(group, no);
--            if (fadeTime >= 0.0f)
--            {
--                motion->SetFadeInTime(fadeTime);
--            }
--
--            fadeTime = _modelJson->GetMotionFadeOutTimeValue(group, no);
--            if (fadeTime >= 0.0f)
--            {
--                motion->SetFadeOutTime(fadeTime);
--            }
-+            motion->SetFadeInTime(fadeTime);
-+        }
- 
 -            // 終了時にメモリから削除
 -            autoDelete = true;
++            motion->SetFadeInTime(fadeTime);
+         }
+ 
 +        fadeTime = _modelJson->GetMotionFadeOutTimeValue(group, no);
 +        if (fadeTime >= 0.0f)
 +        {
 +            motion->SetFadeOutTime(fadeTime);
-         }
- 
++        }
++
 +        // 終了時にメモリから削除
 +        autoDelete = true;
 +
          DeleteBuffer(buffer, path.GetRawString());
      }
-     else
-@@ -355,16 +363,6 @@ void CubismUserModelExtend::ModelParamUp
++    else
++    {
++        // モーションの再生終了コールバックを登録
++        motion->SetFinishedMotionHandler(onFinishedMotionHandler);
++    }
+ 
+     // 優先度を設定してモーションを始める
+     return  _motionManager->StartMotionPriority(motion, autoDelete, priority);
+@@ -323,16 +363,6 @@ void CubismUserModelExtend::ModelParamUp
      _model->SaveParameters();
      //-----------------------------------------------------------------
  
@@ -372,7 +456,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
      if (_expressionManager)
      {
          // 表情でパラメータ更新（相対変化）
-@@ -387,12 +385,6 @@ void CubismUserModelExtend::ModelParamUp
+@@ -355,12 +385,6 @@ void CubismUserModelExtend::ModelParamUp
      _model->AddParameterValue(_idParamEyeBallX, _dragX); // -1から1の値を加える
      _model->AddParameterValue(_idParamEyeBallY, _dragY);
  
@@ -386,7 +470,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
      if (_physics)
      {
 diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev/src/CubismUserModelExtend.hpp
---- ./demo_clean/src/CubismUserModelExtend.hpp	2024-03-28 18:19:03.926168700 +0000
+--- ./demo_clean/src/CubismUserModelExtend.hpp	2025-03-23 03:36:38.131318200 +0000
 +++ ./demo_dev/src/CubismUserModelExtend.hpp	2023-03-05 23:22:10.986750400 +0000
 @@ -27,17 +27,13 @@ class CubismUserModelExtend :
  {
@@ -409,7 +493,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev
  
      /**
      * @brief モデルの更新
-@@ -48,35 +44,24 @@ public:
+@@ -48,35 +44,25 @@ public:
  
  private:
      /**
@@ -450,14 +534,15 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev
 -   * @param[in] group                       モーショングループ名
 -   * @param[in] no                          グループ内の番号
 -   * @param[in] priority                    優先度
--   * @param[in] onFinishedMotionHandler     モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
 -   * @return 開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」
 -   */
-     Csm::CubismMotionQueueEntryHandle StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL);
+-    Csm::CubismMotionQueueEntryHandle StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority);
++    Csm::CubismMotionQueueEntryHandle StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL);
  
      /**
+     * @brief 解放
 diff -pruN --exclude build ./demo_clean/src/LAppAllocator.cpp ./demo_dev/src/LAppAllocator.cpp
---- ./demo_clean/src/LAppAllocator.cpp	2024-03-28 18:19:03.800631600 +0000
+--- ./demo_clean/src/LAppAllocator.cpp	2025-03-23 03:36:37.920013100 +0000
 +++ ./demo_dev/src/LAppAllocator.cpp	2023-03-05 23:22:10.847976000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -475,7 +560,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppAllocator.cpp ./demo_dev/src/LAp
      return malloc(size);
  }
 diff -pruN --exclude build ./demo_clean/src/LAppAllocator.hpp ./demo_dev/src/LAppAllocator.hpp
---- ./demo_clean/src/LAppAllocator.hpp	2024-03-28 18:19:04.446046500 +0000
+--- ./demo_clean/src/LAppAllocator.hpp	2025-03-23 03:36:38.879598000 +0000
 +++ ./demo_dev/src/LAppAllocator.hpp	2023-03-05 23:22:10.953083600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -484,7 +569,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppAllocator.hpp ./demo_dev/src/LAp
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDefine.cpp
---- ./demo_clean/src/LAppDefine.cpp	2024-03-28 18:19:04.269187200 +0000
+--- ./demo_clean/src/LAppDefine.cpp	2025-03-23 03:36:38.612775000 +0000
 +++ ./demo_dev/src/LAppDefine.cpp	2023-03-05 23:22:10.995458800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -501,9 +586,17 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDe
  
      const csmFloat32 ViewLogicalMaxLeft = -2.0f;
      const csmFloat32 ViewLogicalMaxRight = 2.0f;
-@@ -38,6 +38,18 @@ namespace LAppDefine {
+@@ -37,14 +37,19 @@ namespace LAppDefine {
+     // 終了ボタン
      const csmChar* PowerImageName = "close.png";
  
+-    // シェーダー相対パス
+-    const csmChar* ShaderPath = "SampleShaders/";
+-    // 頂点シェーダー
+-    const csmChar* VertShaderName = "VertSprite.vert";
+-    // フラグメントシェーダー
+-    const csmChar* FragShaderName = "FragSprite.frag";
+-
      // モデル定義------------------------------------------
 +    // モデルを配置したディレクトリ名の配列
 +    // ディレクトリ名とmodel3.jsonの名前を一致させておくこと
@@ -520,7 +613,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDe
      // 外部定義ファイル(json)と合わせる
      const csmChar* MotionGroupIdle = "Idle"; // アイドリング
      const csmChar* MotionGroupTapBody = "TapBody"; // 体をタップしたとき
-@@ -52,9 +64,6 @@ namespace LAppDefine {
+@@ -59,9 +64,6 @@ namespace LAppDefine {
      const csmInt32 PriorityNormal = 2;
      const csmInt32 PriorityForce = 3;
  
@@ -531,7 +624,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDe
      const csmBool DebugLogEnable = true;
      const csmBool DebugTouchLogEnable = false;
 diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDefine.hpp
---- ./demo_clean/src/LAppDefine.hpp	2024-03-28 18:19:03.690794600 +0000
+--- ./demo_clean/src/LAppDefine.hpp	2025-03-23 03:36:37.737316700 +0000
 +++ ./demo_dev/src/LAppDefine.hpp	2023-03-05 23:22:10.947784100 +0000
 @@ -1,9 +1,10 @@
 -﻿/**
@@ -545,9 +638,14 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDe
  #pragma once
  
  #include <CubismFramework.hpp>
-@@ -36,6 +37,9 @@ namespace LAppDefine {
+@@ -35,11 +36,10 @@ namespace LAppDefine {
+     extern const csmChar* GearImageName;         ///< 歯車画像ファイル
      extern const csmChar* PowerImageName;        ///< 終了ボタン画像ファイル
  
+-    extern const csmChar* ShaderPath;               ///< シェーダーパス
+-    extern const csmChar* VertShaderName;           ///< 頂点シェーダー
+-    extern const csmChar* FragShaderName;           ///< フラグメントシェーダー
+-
      // モデル定義--------------------------------------------
 +    extern const csmChar* ModelDir[];               ///< モデルを配置したディレクトリ名の配列. ディレクトリ名とmodel3.jsonの名前を一致させておく.
 +    extern const csmInt32 ModelDirSize;             ///< モデルディレクトリ配列のサイズ
@@ -555,7 +653,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDe
                                                      // 外部定義ファイル(json)と合わせる
      extern const csmChar* MotionGroupIdle;          ///< アイドリング時に再生するモーションのリスト
      extern const csmChar* MotionGroupTapBody;       ///< 体をタップした時に再生するモーションのリスト
-@@ -50,8 +54,6 @@ namespace LAppDefine {
+@@ -54,8 +54,6 @@ namespace LAppDefine {
      extern const csmInt32 PriorityNormal;           ///< モーションの優先度定数: 2
      extern const csmInt32 PriorityForce;            ///< モーションの優先度定数: 3
  
@@ -565,7 +663,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDe
      extern const csmBool DebugLogEnable;            ///< デバッグ用ログ表示の有効・無効
      extern const csmBool DebugTouchLogEnable;       ///< タッチ処理のデバッグ用ログ表示の有効・無効
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LAppDelegate.cpp
---- ./demo_clean/src/LAppDelegate.cpp	2024-03-28 18:19:03.753278100 +0000
+--- ./demo_clean/src/LAppDelegate.cpp	2025-03-23 03:36:37.873913500 +0000
 +++ ./demo_dev/src/LAppDelegate.cpp	2023-03-05 23:22:10.975780100 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -633,7 +731,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
          }
          glfwTerminate();
          return GL_FALSE;
-@@ -93,10 +101,6 @@ bool LAppDelegate::Initialize()
+@@ -93,22 +101,24 @@ bool LAppDelegate::Initialize()
      glEnable(GL_BLEND);
      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
  
@@ -644,14 +742,18 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
      // ウィンドウサイズ記憶
      int width, height;
      glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
-@@ -106,9 +110,15 @@ bool LAppDelegate::Initialize()
+     _windowWidth = width;
+     _windowHeight = height;
+ 
+-    // Cubism SDK の初期化
+-    InitializeCubism();
+-
      //AppViewの初期化
      _view->Initialize();
  
--    // Cubism SDK の初期化
 +    // Cubism3の初期化
-     InitializeCubism();
- 
++    InitializeCubism();
++
 +    //load model
 +    LAppLive2DManager::GetInstance();
 +
@@ -699,7 +801,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
      _view = new LAppView();
      _textureManager = new LAppTextureManager();
  }
-@@ -202,58 +208,10 @@ void LAppDelegate::InitializeCubism()
+@@ -202,54 +208,72 @@ void LAppDelegate::InitializeCubism()
      //Initialize cubism
      CubismFramework::Initialize();
  
@@ -710,12 +812,11 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
      CubismMatrix44 projection;
  
      LAppPal::UpdateTime();
--
--    _view->InitializeSprite();
--}
--
+ }
+ 
 -void LAppDelegate::OnMouseCallBack(GLFWwindow* window, int button, int action, int modify)
--{
++GLuint LAppDelegate::CreateShader()
+ {
 -    if (_view == NULL)
 -    {
 -        return;
@@ -724,7 +825,41 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
 -    {
 -        return;
 -    }
--
++    //バーテックスシェーダのコンパイル
++    GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
++    const char* vertexShader =
++        "#version 120\n"
++        "attribute vec3 position;"
++        "attribute vec2 uv;"
++        "varying vec2 vuv;"
++        "void main(void){"
++        "    gl_Position = vec4(position, 1.0);"
++        "    vuv = uv;"
++        "}";
++    glShaderSource(vertexShaderId, 1, &vertexShader, NULL);
++    glCompileShader(vertexShaderId);
++
++    //フラグメントシェーダのコンパイル
++    GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
++    const char* fragmentShader =
++        "#version 120\n"
++        "varying vec2 vuv;"
++        "uniform sampler2D texture;"
++        "uniform vec4 baseColor;"
++        "void main(void){"
++        "    gl_FragColor = texture2D(texture, vuv) * baseColor;"
++        "}";
++    glShaderSource(fragmentShaderId, 1, &fragmentShader, NULL);
++    glCompileShader(fragmentShaderId);
++
++    //プログラムオブジェクトの作成
++    GLuint programId = glCreateProgram();
++    glAttachShader(programId, vertexShaderId);
++    glAttachShader(programId, fragmentShaderId);
++
++    // リンク
++    glLinkProgram(programId);
+ 
 -    if (GLFW_PRESS == action)
 -    {
 -        _captured = true;
@@ -738,91 +873,44 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
 -            _view->OnTouchesEnded(_mouseX, _mouseY);
 -        }
 -    }
--}
--
++    glUseProgram(programId);
++
++    return programId;
+ }
+ 
 -void LAppDelegate::OnMouseCallBack(GLFWwindow* window, double x, double y)
--{
++void LAppDelegate::SetRootDirectory(std::string rootDir)
+ {
 -    _mouseX = static_cast<float>(x);
 -    _mouseY = static_cast<float>(y);
--
++    this->_rootDirectory = rootDir + "/";
++}
+ 
 -    if (!_captured)
 -    {
 -        return;
 -    }
 -    if (_view == NULL)
--    {
--        return;
--    }
--
--    _view->OnTouchesMoved(_mouseX, _mouseY);
- }
- 
- GLuint LAppDelegate::CreateShader()
-@@ -271,10 +229,6 @@ GLuint LAppDelegate::CreateShader()
-         "}";
-     glShaderSource(vertexShaderId, 1, &vertexShader, NULL);
-     glCompileShader(vertexShaderId);
--    if(!CheckShader(vertexShaderId))
--    {
--        return 0;
--    }
- 
-     //フラグメントシェーダのコンパイル
-     GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-@@ -288,10 +242,6 @@ GLuint LAppDelegate::CreateShader()
-         "}";
-     glShaderSource(fragmentShaderId, 1, &fragmentShader, NULL);
-     glCompileShader(fragmentShaderId);
--    if (!CheckShader(fragmentShaderId))
--    {
--        return 0;
--    }
- 
-     //プログラムオブジェクトの作成
-     GLuint programId = glCreateProgram();
-@@ -306,25 +256,24 @@ GLuint LAppDelegate::CreateShader()
-     return programId;
- }
- 
--bool LAppDelegate::CheckShader(GLuint shaderId)
-+void LAppDelegate::SetRootDirectory(std::string rootDir)
- {
--    GLint status;
--    GLint logLength;
--    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logLength);
--    if (logLength > 0)
--    {
--        GLchar* log = reinterpret_cast<GLchar*>(CSM_MALLOC(logLength));
--        glGetShaderInfoLog(shaderId, logLength, &logLength, log);
--        CubismLogError("Shader compile log: %s", log);
--        CSM_FREE(log);
--    }
-+    this->_rootDirectory = rootDir + "/";
-+}
-+
 +Csm::csmVector<string> LAppDelegate::Split(const std::string& baseString, char delimiter)
 +{
 +    Csm::csmVector<string> elems;
 +    stringstream ss(baseString);
 +    string item;
- 
--    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
--    if (status == GL_FALSE)
++
 +    while(getline(ss, item, delimiter))
      {
--        glDeleteShader(shaderId);
--        return false;
+-        return;
 +        if(!item.empty())
 +        {
 +            elems.PushBack(item);
 +        }
      }
  
--    return true;
+-    _view->OnTouchesMoved(_mouseX, _mouseY);
 +    return elems;
  }
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LAppDelegate.hpp
---- ./demo_clean/src/LAppDelegate.hpp	2024-03-28 18:19:04.100879300 +0000
+--- ./demo_clean/src/LAppDelegate.hpp	2025-03-23 03:36:38.383882300 +0000
 +++ ./demo_dev/src/LAppDelegate.hpp	2023-03-05 23:22:10.789104800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -860,7 +948,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
  
      /**
      * @brief   解放する。
-@@ -51,25 +54,6 @@ public:
+@@ -51,23 +54,9 @@ public:
      void Run();
  
      /**
@@ -879,14 +967,14 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
 -    * @param[in]       window            コールバックを呼んだWindow情報
 -    * @param[in]       x                 x座標
 -    * @param[in]       y                 x座標
--    */
--    void OnMouseCallBack(GLFWwindow* window, double x, double y);
--
--    /**
-     * @brief シェーダーを登録する。
++    * @brief シェーダーを登録する。
      */
-     GLuint CreateShader();
-@@ -94,6 +78,21 @@ public:
+-    void OnMouseCallBack(GLFWwindow* window, double x, double y);
++    GLuint CreateShader();
+ 
+     /**
+     * @brief   Window情報を取得する。
+@@ -89,6 +78,21 @@ public:
      */
      void AppEnd() { _isEnd = true; }
  
@@ -908,7 +996,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
      LAppTextureManager* GetTextureManager() { return _textureManager; }
  
  private:
-@@ -108,17 +107,17 @@ private:
+@@ -103,12 +107,17 @@ private:
      ~LAppDelegate();
  
      /**
@@ -917,21 +1005,19 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
      */
      void InitializeCubism();
  
-     /**
--     * @brief   CreateShader内部関数 エラーチェック
-+     * @brief   文字列を指定の文字で切り分ける
-      */
--    bool CheckShader(GLuint shaderId);
-+    Csm::csmVector<std::string> Split(const std::string& baseString, char delim);
- 
 -    LAppAllocator _cubismAllocator;              ///< Cubism SDK Allocator
 -    Csm::CubismFramework::Option _cubismOption;  ///< Cubism SDK Option
++    /**
++     * @brief   文字列を指定の文字で切り分ける
++     */
++    Csm::csmVector<std::string> Split(const std::string& baseString, char delim);
++
 +    LAppAllocator _cubismAllocator;              ///< Cubism3 Allocator
 +    Csm::CubismFramework::Option _cubismOption;  ///< Cubism3 Option
      GLFWwindow* _window;                         ///< OpenGL ウィンドウ
      LAppView* _view;                             ///< View情報
      bool _captured;                              ///< クリックしているか
-@@ -126,28 +125,8 @@ private:
+@@ -116,28 +125,8 @@ private:
      float _mouseY;                               ///< マウスY座標
      bool _isEnd;                                 ///< APP終了しているか
      LAppTextureManager* _textureManager;         ///< テクスチャマネージャー
@@ -962,7 +1048,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
 -
 -};
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src/LAppLive2DManager.cpp
---- ./demo_clean/src/LAppLive2DManager.cpp	2024-03-28 18:19:04.069617100 +0000
+--- ./demo_clean/src/LAppLive2DManager.cpp	2025-03-23 03:36:38.336819400 +0000
 +++ ./demo_dev/src/LAppLive2DManager.cpp	2023-03-05 23:22:10.967799000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -970,10 +1056,11 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -6,9 +6,7 @@
+@@ -6,10 +6,7 @@
   */
  
  #include "LAppLive2DManager.hpp"
+-#include <windows.h>
 -#include <stdio.h>
 -#include <stdlib.h>
 -#include <io.h>
@@ -981,7 +1068,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  #include <GL/glew.h>
  #include <GLFW/glfw3.h>
  #include <Rendering/CubismRenderer.hpp>
-@@ -17,6 +15,7 @@
+@@ -18,6 +15,7 @@
  #include "LAppDelegate.hpp"
  #include "LAppModel.hpp"
  #include "LAppView.hpp"
@@ -989,8 +1076,15 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  
  using namespace Csm;
  using namespace LAppDefine;
-@@ -27,13 +26,7 @@ namespace {
+@@ -26,20 +24,9 @@ using namespace std;
+ namespace {
+     LAppLive2DManager* s_instance = NULL;
  
+-    void BeganMotion(ACubismMotion* self)
+-    {
+-        LAppPal::PrintLogLn("Motion Began: %x", self);
+-    }
+-
      void FinishedMotion(ACubismMotion* self)
      {
 -        LAppPal::PrintLogLn("Motion Finished: %x", self);
@@ -1004,7 +1098,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
      }
  }
  
-@@ -59,18 +52,16 @@ void LAppLive2DManager::ReleaseInstance(
+@@ -65,18 +52,16 @@ void LAppLive2DManager::ReleaseInstance(
  
  LAppLive2DManager::LAppLive2DManager()
      : _viewMatrix(NULL)
@@ -1026,7 +1120,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  }
  
  void LAppLive2DManager::ReleaseAllModel()
-@@ -83,50 +74,6 @@ void LAppLive2DManager::ReleaseAllModel(
+@@ -89,63 +74,6 @@ void LAppLive2DManager::ReleaseAllModel(
      _models.Clear();
  }
  
@@ -1034,30 +1128,43 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 -{
 -    // ResourcesPathの中にあるフォルダ名を全てクロールし、モデルが存在するフォルダを定義する。
 -    // フォルダはあるが同名の.model3.jsonが見つからなかった場合はリストに含めない。
+-    // 一部文字が受け取れないためワイド文字で受け取ってUTF8に変換し格納する。
+-
 -    csmString crawlPath(ResourcesPath);
 -    crawlPath += "*.*";
 -
--    struct _finddata_t fdata;
--    intptr_t fh = _findfirst(crawlPath.GetRawString(), &fdata);
--    if (fh == -1) return;
+-    wchar_t wideStr[MAX_PATH];
+-    csmChar name[MAX_PATH];
+-    LAppPal::ConvertMultiByteToWide(crawlPath.GetRawString(), wideStr, MAX_PATH);
+-
+-    struct _wfinddata_t fdata;
+-    intptr_t fh = _wfindfirst(wideStr, &fdata);
+-    if (fh == -1)
+-    {
+-        return;
+-    }
 -
 -    _modelDir.Clear();
 -
--    while (_findnext(fh, &fdata) == 0)
+-    while (_wfindnext(fh, &fdata) == 0)
 -    {
--        if ((fdata.attrib & _A_SUBDIR) && strcmp(fdata.name, "..") != 0)
+-        if ((fdata.attrib & _A_SUBDIR) && wcscmp(fdata.name, L"..") != 0)
 -        {
+-            LAppPal::ConvertWideToMultiByte(fdata.name, name, MAX_PATH);
+-
 -            // フォルダと同名の.model3.jsonがあるか探索する
 -            csmString model3jsonPath(ResourcesPath);
--            model3jsonPath += fdata.name;
+-            model3jsonPath += name;
 -            model3jsonPath.Append(1, '/');
--            model3jsonPath += fdata.name;
+-            model3jsonPath += name;
 -            model3jsonPath += ".model3.json";
 -
--            struct _finddata_t fdata2;
--            if (_findfirst(model3jsonPath.GetRawString(), &fdata2) != -1)
+-            LAppPal::ConvertMultiByteToWide(model3jsonPath.GetRawString(), wideStr, MAX_PATH);
+-
+-            struct _wfinddata_t fdata2;
+-            if (_wfindfirst(wideStr, &fdata2) != -1)
 -            {
--                _modelDir.PushBack(csmString(fdata.name));
+-                _modelDir.PushBack(csmString(name));
 -            }
 -        }
 -    }
@@ -1077,7 +1184,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  LAppModel* LAppLive2DManager::GetModel(csmUint32 no) const
  {
      if (no < _models.GetSize())
-@@ -151,27 +98,7 @@ void LAppLive2DManager::OnTap(csmFloat32
+@@ -170,27 +98,7 @@ void LAppLive2DManager::OnTap(csmFloat32
  {
      if (DebugLogEnable)
      {
@@ -1100,13 +1207,13 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 -            {
 -                LAppPal::PrintLogLn("[APP]hit area: [%s]", HitAreaNameBody);
 -            }
--            _models[i]->StartRandomMotion(MotionGroupTapBody, PriorityNormal, FinishedMotion);
+-            _models[i]->StartRandomMotion(MotionGroupTapBody, PriorityNormal, FinishedMotion, BeganMotion);
 -        }
 +        LAppPal::PrintLog("[APP]tap point: {x:%.2f y:%.2f}", x, y);
      }
  }
  
-@@ -180,15 +107,15 @@ void LAppLive2DManager::OnUpdate() const
+@@ -199,15 +107,15 @@ void LAppLive2DManager::OnUpdate() const
      int width, height;
      glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
  
@@ -1124,7 +1231,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
              continue;
          }
  
-@@ -196,12 +123,15 @@ void LAppLive2DManager::OnUpdate() const
+@@ -215,12 +123,15 @@ void LAppLive2DManager::OnUpdate() const
          {
              // 横に長いモデルを縦長ウィンドウに表示する際モデルの横サイズでscaleを算出する
              model->GetModelMatrix()->SetWidth(2.0f);
@@ -1142,7 +1249,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  
          // 必要があればここで乗算
          if (_viewMatrix != NULL)
-@@ -209,45 +139,24 @@ void LAppLive2DManager::OnUpdate() const
+@@ -228,45 +139,24 @@ void LAppLive2DManager::OnUpdate() const
              projection.MultiplyByMatrix(_viewMatrix);
          }
  
@@ -1193,7 +1300,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
  
      /*
       * モデル半透明表示を行うサンプルを提示する。
-@@ -268,16 +177,21 @@ void LAppLive2DManager::ChangeScene(Csm:
+@@ -287,16 +177,21 @@ void LAppLive2DManager::ChangeScene(Csm:
  
  #if defined(USE_RENDER_TARGET) || defined(USE_MODEL_RENDER_TARGET)
          // モデル個別にαを付けるサンプルとして、もう1体モデルを作成し、少し位置をずらす
@@ -1209,7 +1316,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
          LAppDelegate::GetInstance()->GetView()->SwitchRenderingTarget(useRenderTarget);
  
 -        // 別レンダリング先を選択した際の背景クリア色
--        float clearColor[3] = { 1.0f, 1.0f, 1.0f };
+-        float clearColor[3] = { 0.0f, 0.0f, 0.0f };
 -        LAppDelegate::GetInstance()->GetView()->SetRenderTargetClearColor(clearColor[0], clearColor[1], clearColor[2]);
 +        if(useRenderTarget)
 +        {
@@ -1220,7 +1327,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
      }
  }
  
-@@ -292,3 +206,20 @@ void LAppLive2DManager::SetViewMatrix(Cu
+@@ -311,3 +206,20 @@ void LAppLive2DManager::SetViewMatrix(Cu
          _viewMatrix->GetArray()[i] = m->GetArray()[i];
      }
  }
@@ -1242,7 +1349,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 +    _translateY = translateY;
 +}
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src/LAppLive2DManager.hpp
---- ./demo_clean/src/LAppLive2DManager.hpp	2024-03-28 18:19:04.607350600 +0000
+--- ./demo_clean/src/LAppLive2DManager.hpp	2025-03-23 03:36:39.098754200 +0000
 +++ ./demo_dev/src/LAppLive2DManager.hpp	2023-03-05 23:22:10.829032000 +0000
 @@ -1,18 +1,20 @@
 -﻿/**
@@ -1358,7 +1465,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
 +    float _translateY;
  };
 diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppModel.cpp
---- ./demo_clean/src/LAppModel.cpp	2024-03-28 18:19:04.524642700 +0000
+--- ./demo_clean/src/LAppModel.cpp	2025-03-23 03:36:38.969736900 +0000
 +++ ./demo_dev/src/LAppModel.cpp	2024-03-28 18:26:32.604595000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -1531,7 +1638,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Layout
      csmMap<csmString, csmFloat32> layout;
      _modelSetting->GetLayoutMap(layout);
-@@ -274,7 +226,7 @@ void LAppModel::PreloadMotionGroup(const
+@@ -274,24 +226,32 @@ void LAppModel::PreloadMotionGroup(const
  
          if (_debugMode)
          {
@@ -1540,49 +1647,40 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
          }
  
          csmByte* buffer;
-@@ -282,27 +234,24 @@ void LAppModel::PreloadMotionGroup(const
+         csmSizeInt size;
          buffer = CreateBuffer(path.GetRawString(), &size);
-         CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString()));
+-        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString(), NULL, NULL, _modelSetting, group, i));
++        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString()));
  
 -        if (tmpMotion)
 +        csmFloat32 fadeTime = _modelSetting->GetMotionFadeInTimeValue(group, i);
 +        if (fadeTime >= 0.0f)
          {
--            csmFloat32 fadeTime = _modelSetting->GetMotionFadeInTimeValue(group, i);
--            if (fadeTime >= 0.0f)
--            {
--                tmpMotion->SetFadeInTime(fadeTime);
--            }
+-            tmpMotion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
 +            tmpMotion->SetFadeInTime(fadeTime);
 +        }
- 
--            fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, i);
--            if (fadeTime >= 0.0f)
--            {
--                tmpMotion->SetFadeOutTime(fadeTime);
--            }
--            tmpMotion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
-+        fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, i);
-+        if (fadeTime >= 0.0f)
-+        {
-+            tmpMotion->SetFadeOutTime(fadeTime);
-+        }
-+        tmpMotion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
  
 -            if (_motions[name] != NULL)
 -            {
 -                ACubismMotion::Delete(_motions[name]);
 -            }
 -            _motions[name] = tmpMotion;
++        fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, i);
++        if (fadeTime >= 0.0f)
++        {
++            tmpMotion->SetFadeOutTime(fadeTime);
+         }
++        tmpMotion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
++
 +        if (_motions[name] != NULL)
 +        {
 +            ACubismMotion::Delete(_motions[name]);
-         }
++        }
 +        _motions[name] = tmpMotion;
  
          DeleteBuffer(buffer, path.GetRawString());
      }
-@@ -357,62 +306,57 @@ void LAppModel::Update()
+@@ -346,62 +306,57 @@ void LAppModel::Update()
      const csmFloat32 deltaTimeSeconds = LAppPal::GetDeltaTime();
      _userTimeSeconds += deltaTimeSeconds;
  
@@ -1596,23 +1694,23 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 -    //-----------------------------------------------------------------
 -    _model->LoadParameters(); // 前回セーブされた状態をロード
 -    if (_motionManager->IsFinished())
--    {
++    if (_detector)
+     {
 -        // モーションの再生がない場合、待機モーションの中からランダムで再生する
 -        StartRandomMotion(MotionGroupIdle, PriorityIdle);
 -    }
 -    else
-+    if (_detector)
-     {
+-    {
 -        motionUpdated = _motionManager->UpdateMotion(_model, deltaTimeSeconds); // モーションを更新
 -    }
 -    _model->SaveParameters(); // 状態を保存
 -    //-----------------------------------------------------------------
--
--    // 不透明度
--    _opacity = _model->GetModelOpacity();
 +        auto idMan = CubismFramework::GetIdManager();
 +        auto params = _detector->getParams();
  
+-    // 不透明度
+-    _opacity = _model->GetModelOpacity();
+-
 -    // まばたき
 -    if (!motionUpdated)
 -    {
@@ -1690,7 +1788,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      // 物理演算の設定
-@@ -421,22 +365,6 @@ void LAppModel::Update()
+@@ -410,22 +365,6 @@ void LAppModel::Update()
          _physics->Evaluate(_model, deltaTimeSeconds);
      }
  
@@ -1713,7 +1811,16 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      // ポーズの設定
      if (_pose != NULL)
      {
-@@ -457,7 +385,7 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -436,7 +375,7 @@ void LAppModel::Update()
+ 
+ }
+ 
+-CubismMotionQueueEntryHandle LAppModel::StartMotion(const csmChar* group, csmInt32 no, csmInt32 priority, ACubismMotion::FinishedMotionCallback onFinishedMotionHandler, ACubismMotion::BeganMotionCallback onBeganMotionHandler)
++CubismMotionQueueEntryHandle LAppModel::StartMotion(const csmChar* group, csmInt32 no, csmInt32 priority, ACubismMotion::FinishedMotionCallback onFinishedMotionHandler)
+ {
+     if (priority == PriorityForce)
+     {
+@@ -446,7 +385,7 @@ CubismMotionQueueEntryHandle LAppModel::
      {
          if (_debugMode)
          {
@@ -1722,33 +1829,24 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
          }
          return InvalidMotionQueueEntryHandleValue;
      }
-@@ -478,23 +406,19 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -466,19 +405,25 @@ CubismMotionQueueEntryHandle LAppModel::
+         csmByte* buffer;
          csmSizeInt size;
          buffer = CreateBuffer(path.GetRawString(), &size);
-         motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler));
--
--        if  (motion)
+-        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler, onBeganMotionHandler, _modelSetting, group, no));
++        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler));
 +        csmFloat32 fadeTime = _modelSetting->GetMotionFadeInTimeValue(group, no);
 +        if (fadeTime >= 0.0f)
-         {
--            csmFloat32 fadeTime = _modelSetting->GetMotionFadeInTimeValue(group, no);
--            if (fadeTime >= 0.0f)
--            {
--                motion->SetFadeInTime(fadeTime);
--            }
++        {
 +            motion->SetFadeInTime(fadeTime);
 +        }
  
--            fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, no);
--            if (fadeTime >= 0.0f)
--            {
--                motion->SetFadeOutTime(fadeTime);
--            }
--            motion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
--            autoDelete = true; // 終了時にメモリから削除
+-        if  (motion)
 +        fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, no);
 +        if (fadeTime >= 0.0f)
-+        {
+         {
+-            motion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
+-            autoDelete = true; // 終了時にメモリから削除
 +            motion->SetFadeOutTime(fadeTime);
          }
 +        motion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
@@ -1756,7 +1854,13 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  
          DeleteBuffer(buffer, path.GetRawString());
      }
-@@ -509,12 +433,11 @@ CubismMotionQueueEntryHandle LAppModel::
+     else
+     {
+-        motion->SetBeganMotionHandler(onBeganMotionHandler);
+         motion->SetFinishedMotionHandler(onFinishedMotionHandler);
+     }
+ 
+@@ -488,17 +433,16 @@ CubismMotionQueueEntryHandle LAppModel::
      {
          csmString path = voice;
          path = _modelHomeDir + path;
@@ -1770,7 +1874,22 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
      return  _motionManager->StartMotionPriority(motion, autoDelete, priority);
  }
-@@ -579,7 +502,7 @@ void LAppModel::SetExpression(const csmC
+ 
+-CubismMotionQueueEntryHandle LAppModel::StartRandomMotion(const csmChar* group, csmInt32 priority, ACubismMotion::FinishedMotionCallback onFinishedMotionHandler, ACubismMotion::BeganMotionCallback onBeganMotionHandler)
++CubismMotionQueueEntryHandle LAppModel::StartRandomMotion(const csmChar* group, csmInt32 priority, ACubismMotion::FinishedMotionCallback onFinishedMotionHandler)
+ {
+     if (_modelSetting->GetMotionCount(group) == 0)
+     {
+@@ -507,7 +451,7 @@ CubismMotionQueueEntryHandle LAppModel::
+ 
+     csmInt32 no = rand() % _modelSetting->GetMotionCount(group);
+ 
+-    return StartMotion(group, no, priority, onFinishedMotionHandler, onBeganMotionHandler);
++    return StartMotion(group, no, priority, onFinishedMotionHandler);
+ }
+ 
+ void LAppModel::DoDraw()
+@@ -558,16 +502,16 @@ void LAppModel::SetExpression(const csmC
      ACubismMotion* motion = _expressions[expressionID];
      if (_debugMode)
      {
@@ -1779,7 +1898,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      if (motion != NULL)
-@@ -588,7 +511,7 @@ void LAppModel::SetExpression(const csmC
+     {
+-        _expressionManager->StartMotion(motion, false);
++        _expressionManager->StartMotionPriority(motion, false, PriorityForce);
      }
      else
      {
@@ -1788,7 +1909,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  }
  
-@@ -662,29 +585,36 @@ Csm::Rendering::CubismOffscreenSurface_O
+@@ -641,29 +585,36 @@ Csm::Rendering::CubismOffscreenSurface_O
      return _renderBuffer;
  }
  
@@ -1844,7 +1965,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  }
 +
 diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppModel.hpp
---- ./demo_clean/src/LAppModel.hpp	2024-03-28 18:19:04.414826700 +0000
+--- ./demo_clean/src/LAppModel.hpp	2025-03-23 03:36:38.828478700 +0000
 +++ ./demo_dev/src/LAppModel.hpp	2024-03-28 18:25:30.566916900 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -1874,7 +1995,31 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  
      /**
       * @brief デストラクタ
-@@ -115,12 +118,11 @@ public:
+@@ -66,10 +69,9 @@ public:
+      * @param[in]   no                          グループ内の番号
+      * @param[in]   priority                    優先度
+      * @param[in]   onFinishedMotionHandler     モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
+-     * @param[in]   onBeganMotionHandler        モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
+      * @return                                  開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」
+      */
+-    Csm::CubismMotionQueueEntryHandle StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL, Csm::ACubismMotion::BeganMotionCallback onBeganMotionHandler = NULL);
++    Csm::CubismMotionQueueEntryHandle StartMotion(const Csm::csmChar* group, Csm::csmInt32 no, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL);
+ 
+     /**
+      * @brief   ランダムに選ばれたモーションの再生を開始する。
+@@ -77,10 +79,9 @@ public:
+      * @param[in]   group                       モーショングループ名
+      * @param[in]   priority                    優先度
+      * @param[in]   onFinishedMotionHandler     モーション再生終了時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
+-     * @param[in]   onBeganMotionHandler        モーション再生開始時に呼び出されるコールバック関数。NULLの場合、呼び出されない。
+      * @return                                  開始したモーションの識別番号を返す。個別のモーションが終了したか否かを判定するIsFinished()の引数で使用する。開始できない時は「-1」
+      */
+-    Csm::CubismMotionQueueEntryHandle StartRandomMotion(const Csm::csmChar* group, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL, Csm::ACubismMotion::BeganMotionCallback onBeganMotionHandler = NULL);
++    Csm::CubismMotionQueueEntryHandle StartRandomMotion(const Csm::csmChar* group, Csm::csmInt32 priority, Csm::ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = NULL);
+ 
+     /**
+      * @brief   引数で指定した表情モーションをセットする
+@@ -117,12 +118,11 @@ public:
      Csm::Rendering::CubismOffscreenSurface_OpenGLES2& GetRenderBuffer();
  
      /**
@@ -1890,7 +2035,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
  
  protected:
      /**
-@@ -175,6 +177,17 @@ private:
+@@ -177,6 +177,17 @@ private:
      */
      void ReleaseExpressions();
  
@@ -1908,7 +2053,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
      Csm::ICubismModelSetting* _modelSetting; ///< モデルセッティング情報
      Csm::csmString _modelHomeDir; ///< モデルセッティングが置かれたディレクトリ
      Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
-@@ -191,7 +204,10 @@ private:
+@@ -193,7 +204,10 @@ private:
      const Csm::CubismId* _idParamEyeBallX; ///< パラメータID: ParamEyeBallX
      const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
  
@@ -1922,7 +2067,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
 +
 +
 diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.cpp
---- ./demo_clean/src/LAppPal.cpp	2024-03-28 18:19:04.037915500 +0000
+--- ./demo_clean/src/LAppPal.cpp	2025-03-23 03:36:38.287821100 +0000
 +++ ./demo_dev/src/LAppPal.cpp	2023-03-05 23:22:10.834981800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -1930,10 +2075,11 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -6,7 +6,9 @@
+@@ -6,8 +6,9 @@
   */
  
  #include "LAppPal.hpp"
+-#include <windows.h>
 -#include <cstdio>
 +#include <stdexcept>
 +#include <stdio.h>
@@ -1941,8 +2087,20 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
  #include <stdarg.h>
  #include <sys/stat.h>
  #include <iostream>
-@@ -35,37 +37,18 @@ csmByte* LAppPal::LoadFileAsBytes(const
-     if (stat(path, &statBuf) == 0)
+@@ -28,55 +29,30 @@ double LAppPal::s_deltaTime = 0.0;
+ 
+ csmByte* LAppPal::LoadFileAsBytes(const string filePath, csmSizeInt* outSize)
+ {
+-    wchar_t wideStr[MAX_PATH];
+-    MultiByteToWideChar(CP_UTF8, 0U, filePath.c_str(), -1, wideStr, MAX_PATH);
++    //filePath;//
++    const char* path = filePath.c_str();
+ 
+     int size = 0;
+-    struct _stat statBuf;
+-    if (_wstat(wideStr, &statBuf) == 0)
++    struct stat statBuf;
++    if (stat(path, &statBuf) == 0)
      {
          size = statBuf.st_size;
 -
@@ -1950,7 +2108,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
 -        {
 -            if (DebugLogEnable)
 -            {
--                PrintLogLn("Stat succeeded but file size is zero. path:%s", path);
+-                PrintLogLn("Stat succeeded but file size is zero. path:%s", filePath.c_str());
 -            }
 -            return NULL;
 -        }
@@ -1959,31 +2117,45 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
 -    {
 -        if (DebugLogEnable)
 -        {
--            PrintLogLn("Stat failed. errno:%d path:%s", errno, path);
+-            PrintLogLn("Stat failed. errno:%d path:%s", errno, filePath.c_str());
 -        }
 -        return NULL;
 +        PrintLog(path);
      }
  
-     std::fstream file;
+-    std::wfstream file;
+-    file.open(wideStr, std::ios::in | std::ios::binary);
++    std::fstream file;
 +    char* buf = new char[size];
 +
-     file.open(path, std::ios::in | std::ios::binary);
++    file.open(path, std::ios::in | std::ios::binary);
      if (!file.is_open())
      {
 -        if (DebugLogEnable)
 -        {
--            PrintLogLn("File open failed. path:%s", path);
+-            PrintLogLn("File open failed. path:%s", filePath.c_str());
 -        }
 +        throw std::runtime_error("Failed to open file " + filePath);
          return NULL;
      }
 -
--    char* buf = new char[size];
-     file.read(buf, size);
+-    // ファイル名はワイド文字で探しているがファイルの中身はutf-8なので、1バイトずつ取得する。
+-
+-    *outSize = size;
+-    csmChar* buf = new char[*outSize];
+-    std::wfilebuf* fileBuf = file.rdbuf();
+-    for (csmUint32 i = 0; i < *outSize; i++)
+-    {
+-        buf[i] = fileBuf->sbumpc();
+-    }
++    file.read(buf, size);
      file.close();
  
-@@ -95,28 +78,8 @@ void LAppPal::PrintLog(const csmChar* fo
++    *outSize = size;
+     return reinterpret_cast<csmByte*>(buf);
+ }
+ 
+@@ -102,28 +78,8 @@ void LAppPal::PrintLog(const csmChar* fo
      va_list args;
      csmChar buf[256];
      va_start(args, format);
@@ -2014,7 +2186,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
      va_end(args);
  }
  
-@@ -124,8 +87,3 @@ void LAppPal::PrintMessage(const csmChar
+@@ -131,18 +87,3 @@ void LAppPal::PrintMessage(const csmChar
  {
      PrintLog("%s", message);
  }
@@ -2023,8 +2195,18 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
 -{
 -    PrintLogLn("%s", message);
 -}
+-
+-bool LAppPal::ConvertMultiByteToWide(const csmChar* multiByte, wchar_t* wide, int wideSize)
+-{
+-    return MultiByteToWideChar(CP_UTF8, 0U, multiByte, -1, wide, wideSize) != 0;
+-}
+-
+-bool LAppPal::ConvertWideToMultiByte(const wchar_t* wide, csmChar* multiByte, int multiByteSize)
+-{
+-    return WideCharToMultiByte(CP_UTF8, 0U, wide, -1, multiByte, multiByteSize, NULL, NULL) != 0;
+-}
 diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.hpp
---- ./demo_clean/src/LAppPal.hpp	2024-03-28 18:19:03.957378000 +0000
+--- ./demo_clean/src/LAppPal.hpp	2025-03-23 03:36:38.181753100 +0000
 +++ ./demo_dev/src/LAppPal.hpp	2023-03-05 23:22:10.939820800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2058,7 +2240,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
      * @brief メッセージを出力する
      *
      * メッセージを出力する
-@@ -82,16 +72,6 @@ public:
+@@ -82,34 +72,6 @@ public:
      */
      static void PrintMessage(const Csm::csmChar* message);
  
@@ -2072,11 +2254,29 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
 -    */
 -    static void PrintMessageLn(const Csm::csmChar* message);
 -
+-   /**
+-    * @brief マルチバイト文字からワイド文字に変換する
+-    *
+-    * @param[in]   multiByte 変換元
+-    * @param[in]   wide      格納先
+-    * @param[in]   wideSize  格納先の大きさ
+-    */
+-    static bool ConvertMultiByteToWide(const Csm::csmChar* multiByte, wchar_t* wide, int wideSize);
+-
+-   /**
+-    * @brief ワイド文字からマルチバイト文字に変換する
+-    *
+-    * @param[in]   wide          変換元
+-    * @param[in]   multiByte     格納先
+-    * @param[in]   multiByteSize 格納先の大きさ
+-    */
+-    static bool ConvertWideToMultiByte(const wchar_t* wide, Csm::csmChar* multiByte, int multiByteSize);
+-
  private:
      static double s_currentFrame;
      static double s_lastFrame;
 diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSprite.cpp
---- ./demo_clean/src/LAppSprite.cpp	2024-03-28 18:19:04.304960000 +0000
+--- ./demo_clean/src/LAppSprite.cpp	2025-03-23 03:36:38.649078200 +0000
 +++ ./demo_dev/src/LAppSprite.cpp	2023-03-05 23:22:10.900085700 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2194,7 +2394,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
 -    _maxHeight = height;
 -}
 diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSprite.hpp
---- ./demo_clean/src/LAppSprite.hpp	2024-03-28 18:19:03.831886500 +0000
+--- ./demo_clean/src/LAppSprite.hpp	2025-03-23 03:36:37.970299000 +0000
 +++ ./demo_dev/src/LAppSprite.hpp	2023-03-05 23:22:10.876156000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2238,8 +2438,181 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSp
 -    int _maxHeight;  ///< ウインドウ高さ
  };
  
+diff -pruN --exclude build ./demo_clean/src/LAppSpriteShader.cpp ./demo_dev/src/LAppSpriteShader.cpp
+--- ./demo_clean/src/LAppSpriteShader.cpp	2025-03-23 03:36:37.781727200 +0000
++++ ./demo_dev/src/LAppSpriteShader.cpp	1970-01-01 00:00:00.000000000 +0000
+@@ -1,108 +0,0 @@
+-﻿/**
+- * Copyright(c) Live2D Inc. All rights reserved.
+- *
+- * Use of this source code is governed by the Live2D Open Software license
+- * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+- */
+-
+-#include "LAppSpriteShader.hpp"
+-#include <Utils/CubismDebug.hpp>
+-#include "LAppDefine.hpp"
+-#include "LAppPal.hpp"
+-
+-using namespace LAppDefine;
+-
+-LAppSpriteShader::LAppSpriteShader()
+-{
+-    _programId = CreateShader();
+-}
+-
+-LAppSpriteShader::~LAppSpriteShader()
+-{
+-    glDeleteShader(_programId);
+-}
+-
+-GLuint LAppSpriteShader::GetShaderId() const
+-{
+-    return _programId;
+-}
+-
+-GLuint LAppSpriteShader::CreateShader()
+-{
+-    // シェーダーのパスの作成
+-    Csm::csmString vertShaderFile(ShaderPath);
+-    vertShaderFile += VertShaderName;
+-    Csm::csmString fragShaderFile(ShaderPath);
+-    fragShaderFile += FragShaderName;
+-
+-    // シェーダーのコンパイル
+-    GLuint vertexShaderId = CompileShader(vertShaderFile, GL_VERTEX_SHADER);
+-    GLuint fragmentShaderId = CompileShader(fragShaderFile, GL_FRAGMENT_SHADER);
+-
+-    if (!vertexShaderId || !fragmentShaderId)
+-    {
+-        return 0;
+-    }
+-
+-    //プログラムオブジェクトの作成
+-    GLuint programId = glCreateProgram();
+-    glAttachShader(programId, vertexShaderId);
+-    glAttachShader(programId, fragmentShaderId);
+-
+-    // リンク
+-    glLinkProgram(programId);
+-
+-    glUseProgram(programId);
+-
+-    // 不要になったシェーダーオブジェクトの削除
+-    glDeleteShader(vertexShaderId);
+-    glDeleteShader(fragmentShaderId);
+-
+-    return programId;
+-}
+-
+-bool LAppSpriteShader::CheckShader(GLuint shaderId)
+-{
+-    GLint status;
+-    GLint logLength;
+-    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logLength);
+-    if (logLength > 0)
+-    {
+-        GLchar* log = reinterpret_cast<GLchar*>(CSM_MALLOC(logLength));
+-        glGetShaderInfoLog(shaderId, logLength, &logLength, log);
+-        CubismLogError("Shader compile log: %s", log);
+-        CSM_FREE(log);
+-    }
+-
+-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status);
+-    if (status == GL_FALSE)
+-    {
+-        glDeleteShader(shaderId);
+-        return false;
+-    }
+-
+-    return true;
+-}
+-
+-GLuint LAppSpriteShader::CompileShader(Csm::csmString filename, GLenum shaderType)
+-{
+-    // ファイル読み込み
+-    Csm::csmSizeInt bufferSize = 0;
+-    const char* shaderString = reinterpret_cast<const char*>(LAppPal::LoadFileAsBytes(filename.GetRawString(), &bufferSize));
+-    const GLint glSize = (GLint)bufferSize;
+-
+-    // コンパイル
+-    GLuint shaderId = glCreateShader(shaderType);
+-    glShaderSource(shaderId, 1, &shaderString, &glSize);
+-    glCompileShader(shaderId);
+-
+-    // 読み込んだシェーダー文字列の開放
+-    LAppPal::ReleaseBytes(reinterpret_cast<Csm::csmByte*>(const_cast<char*>(shaderString)));
+-
+-    if (!CheckShader(shaderId))
+-    {
+-        return 0;
+-    }
+-
+-    return shaderId;
+-}
+diff -pruN --exclude build ./demo_clean/src/LAppSpriteShader.hpp ./demo_dev/src/LAppSpriteShader.hpp
+--- ./demo_clean/src/LAppSpriteShader.hpp	2025-03-23 03:36:38.009877400 +0000
++++ ./demo_dev/src/LAppSpriteShader.hpp	1970-01-01 00:00:00.000000000 +0000
+@@ -1,57 +0,0 @@
+-﻿/**
+- * Copyright(c) Live2D Inc. All rights reserved.
+- *
+- * Use of this source code is governed by the Live2D Open Software license
+- * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+- */
+-
+-#pragma once
+-
+-#include <GL/glew.h>
+-#include <GLFW/glfw3.h>
+-#include <Utils/CubismString.hpp>
+-#include "CubismFramework.hpp"
+-
+-/**
+-* @brief スプライト用のシェーダー設定を保持するクラス
+-*/
+-class LAppSpriteShader
+-{
+-public:
+-    /**
+-     * @brief コンストラクタ
+-     */
+-    LAppSpriteShader();
+-
+-    /**
+-     * @brief デストラクタ
+-     */
+-    ~LAppSpriteShader();
+-
+-    /**
+-     * @brief   シェーダーIDを取得する
+-     */
+-    GLuint GetShaderId() const;
+-
+-private:
+-    /**
+-    * @brief シェーダーオブジェクトを作成する。
+-    */
+-    GLuint CreateShader();
+-
+-    /**
+-     * @brief   CreateShader内部関数 エラーチェック
+-     */
+-    bool CheckShader(GLuint shaderId);
+-
+-    /**
+-    * @brief シェーダーをコンパイルする。
+-    *        コンパイルに失敗した場合には 0 が戻る。
+-    *
+-    * @param[in]       filename     シェーダーファイル名
+-    * @param[in]       shaderType   作成するシェーダーの種類
+-    */
+-    GLuint CompileShader(Csm::csmString filename, GLenum shaderType);
+-
+-    GLuint _programId;                       ///< シェーダID
+-};
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/src/LAppTextureManager.cpp
---- ./demo_clean/src/LAppTextureManager.cpp	2024-03-28 18:19:04.226438800 +0000
+--- ./demo_clean/src/LAppTextureManager.cpp	2025-03-23 03:36:38.568277100 +0000
 +++ ./demo_dev/src/LAppTextureManager.cpp	2023-03-05 23:22:10.765166600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2262,7 +2635,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
  #include "LAppPal.hpp"
  
  LAppTextureManager::LAppTextureManager()
-@@ -89,6 +96,46 @@ LAppTextureManager::TextureInfo* LAppTex
+@@ -89,11 +96,50 @@ LAppTextureManager::TextureInfo* LAppTex
  
  }
  
@@ -2309,8 +2682,29 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
  void LAppTextureManager::ReleaseTextures()
  {
      for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
+     {
+-        glDeleteTextures(1, &(_textures[i]->id));
+         delete _textures[i];
+     }
+ 
+@@ -108,7 +154,6 @@ void LAppTextureManager::ReleaseTexture(
+         {
+             continue;
+         }
+-        glDeleteTextures(1, &(_textures[i]->id));
+         delete _textures[i];
+         _textures.Remove(i);
+         break;
+@@ -121,7 +166,6 @@ void LAppTextureManager::ReleaseTexture(
+     {
+         if (_textures[i]->fileName == fileName)
+         {
+-            glDeleteTextures(1, &(_textures[i]->id));
+             delete _textures[i];
+             _textures.Remove(i);
+             break;
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/src/LAppTextureManager.hpp
---- ./demo_clean/src/LAppTextureManager.hpp	2024-03-28 18:19:04.351863200 +0000
+--- ./demo_clean/src/LAppTextureManager.hpp	2025-03-23 03:36:38.735450300 +0000
 +++ ./demo_dev/src/LAppTextureManager.hpp	2023-03-05 23:22:10.822016600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2341,7 +2735,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/sr
  
  private:
 diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView.cpp
---- ./demo_clean/src/LAppView.cpp	2024-03-28 18:19:03.722026200 +0000
+--- ./demo_clean/src/LAppView.cpp	2025-03-23 03:36:37.822279000 +0000
 +++ ./demo_dev/src/LAppView.cpp	2024-03-28 18:26:14.230329000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2355,6 +2749,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  #include "LAppDefine.hpp"
 -#include "TouchManager.hpp"
  #include "LAppSprite.hpp"
+-#include "LAppSpriteShader.hpp"
  #include "LAppModel.hpp"
  
 +#include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
@@ -2364,7 +2759,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  using namespace LAppDefine;
  
  LAppView::LAppView():
-     _programId(0),
++    _programId(0),
      _back(NULL),
 -    _gear(NULL),
 -    _power(NULL),
@@ -2381,9 +2776,11 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
      // デバイス座標からスクリーン座標に変換するための
      _deviceToScreen = new CubismMatrix44();
  
-@@ -47,12 +44,10 @@ LAppView::~LAppView()
+@@ -46,14 +43,11 @@ LAppView::LAppView():
+ LAppView::~LAppView()
  {
      _renderBuffer.DestroyOffscreenSurface();
+-    delete _spriteShader;
      delete _renderSprite;
 +
      delete _viewMatrix;
@@ -2395,7 +2792,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  }
  
  void LAppView::Initialize()
-@@ -75,7 +70,7 @@ void LAppView::Initialize()
+@@ -76,7 +70,7 @@ void LAppView::Initialize()
      _viewMatrix->SetScreenRect(left, right, bottom, top); // デバイスに対応する画面の範囲。 Xの左端, Xの右端, Yの下端, Yの上端
      _viewMatrix->Scale(ViewScale, ViewScale);
  
@@ -2404,7 +2801,16 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
      if (width > height)
      {
          float screenW = fabsf(right - left);
-@@ -103,16 +98,7 @@ void LAppView::Initialize()
+@@ -100,25 +94,11 @@ void LAppView::Initialize()
+         ViewLogicalMaxBottom,
+         ViewLogicalMaxTop
+     );
+-
+-    // シェーダー作成
+-    _spriteShader = new LAppSpriteShader();
+-
+-    InitializeSprite();
+ }
  
  void LAppView::Render()
  {
@@ -2421,7 +2827,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  
      LAppLive2DManager* Live2DManager = LAppLive2DManager::GetInstance();
  
-@@ -132,16 +118,15 @@ void LAppView::Render()
+@@ -138,16 +118,15 @@ void LAppView::Render()
              1.0f, 0.0f,
          };
  
@@ -2442,7 +2848,14 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
              }
          }
      }
-@@ -155,85 +140,22 @@ void LAppView::InitializeSprite()
+@@ -155,91 +134,28 @@ void LAppView::Render()
+ 
+ void LAppView::InitializeSprite()
+ {
+-    GLuint programId = _spriteShader->GetShaderId();
++    _programId = LAppDelegate::GetInstance()->CreateShader();
+ 
+     int width, height;
      glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
  
      LAppTextureManager* textureManager = LAppDelegate::GetInstance()->GetTextureManager();
@@ -2458,10 +2871,8 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
      float y = height * 0.5f;
 -    float fWidth = static_cast<float>(backgroundTexture->width * 2.0f);
 -    float fHeight = static_cast<float>(height * 0.95f);
-+    float fWidth = static_cast<float>(width);
-+    float fHeight = static_cast<float>(height);
-     _back = new LAppSprite(x, y, fWidth, fHeight, backgroundTexture->id, _programId);
- 
+-    _back = new LAppSprite(x, y, fWidth, fHeight, backgroundTexture->id, programId);
+-
 -    imageName = GearImageName;
 -    LAppTextureManager::TextureInfo* gearTexture = textureManager->CreateTextureFromPngFile(resourcesPath + imageName);
 -
@@ -2469,7 +2880,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -    y = static_cast<float>(height - gearTexture->height * 0.5f);
 -    fWidth = static_cast<float>(gearTexture->width);
 -    fHeight = static_cast<float>(gearTexture->height);
--    _gear = new LAppSprite(x, y, fWidth, fHeight, gearTexture->id, _programId);
+-    _gear = new LAppSprite(x, y, fWidth, fHeight, gearTexture->id, programId);
 -
 -    imageName = PowerImageName;
 -    LAppTextureManager::TextureInfo* powerTexture = textureManager->CreateTextureFromPngFile(resourcesPath + imageName);
@@ -2478,12 +2889,15 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -    y = static_cast<float>(powerTexture->height * 0.5f);
 -    fWidth = static_cast<float>(powerTexture->width);
 -    fHeight = static_cast<float>(powerTexture->height);
--    _power = new LAppSprite(x, y, fWidth, fHeight, powerTexture->id, _programId);
--
+-    _power = new LAppSprite(x, y, fWidth, fHeight, powerTexture->id, programId);
++    float fWidth = static_cast<float>(width);
++    float fHeight = static_cast<float>(height);
++    _back = new LAppSprite(x, y, fWidth, fHeight, backgroundTexture->id, _programId);
+ 
      // 画面全体を覆うサイズ
      x = width * 0.5f;
      y = height * 0.5f;
-     _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, _programId);
+-    _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, programId);
 -}
 -
 -void LAppView::OnTouchesBegan(float px, float py) const
@@ -2517,6 +2931,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -            LAppPal::PrintLogLn("[APP]touchesEnded x:%.2f y:%.2f", x, y);
 -        }
 -        live2DManager->OnTap(x, y);
++    _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, _programId);
  
 -        // 歯車にタップしたか
 -        if (_gear->IsHit(px, py))
@@ -2533,7 +2948,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  }
  
  float LAppView::TransformViewX(float deviceX) const
-@@ -258,7 +180,7 @@ float LAppView::TransformScreenY(float d
+@@ -264,7 +180,7 @@ float LAppView::TransformScreenY(float d
      return _deviceToScreen->TransformY(deviceY);
  }
  
@@ -2542,7 +2957,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  {
      // 別のレンダリングターゲットへ向けて描画する場合の使用するフレームバッファ
      Csm::Rendering::CubismOffscreenSurface_OpenGLES2* useTarget = NULL;
-@@ -271,12 +193,13 @@ void LAppView::PreModelDraw(LAppModel& r
+@@ -277,12 +193,13 @@ void LAppView::PreModelDraw(LAppModel& r
  
          if (!useTarget->IsValid())
          {// 描画ターゲット内部未作成の場合はここで作成
@@ -2560,7 +2975,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
              }
          }
  
-@@ -286,7 +209,7 @@ void LAppView::PreModelDraw(LAppModel& r
+@@ -292,7 +209,7 @@ void LAppView::PreModelDraw(LAppModel& r
      }
  }
  
@@ -2569,7 +2984,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  {
      // 別のレンダリングターゲットへ向けて描画する場合の使用するフレームバッファ
      Csm::Rendering::CubismOffscreenSurface_OpenGLES2* useTarget = NULL;
-@@ -312,12 +235,6 @@ void LAppView::PostModelDraw(LAppModel&
+@@ -318,12 +235,6 @@ void LAppView::PostModelDraw(LAppModel&
              };
  
              _renderSprite->SetColor(1.0f, 1.0f, 1.0f, GetSpriteAlpha(0));
@@ -2582,7 +2997,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
              _renderSprite->RenderImmidiate(useTarget->GetColorBuffer(), uvVertex);
          }
      }
-@@ -382,32 +299,4 @@ void LAppView::ResizeSprite()
+@@ -388,32 +299,4 @@ void LAppView::ResizeSprite()
              _back->ResetRect(x, y, fWidth, fHeight);
          }
      }
@@ -2616,7 +3031,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -    }
  }
 diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView.hpp
---- ./demo_clean/src/LAppView.hpp	2024-03-28 18:19:03.659043800 +0000
+--- ./demo_clean/src/LAppView.hpp	2025-03-23 03:36:37.693545200 +0000
 +++ ./demo_dev/src/LAppView.hpp	2024-03-28 18:25:01.124283600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2624,15 +3039,18 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -14,7 +14,6 @@
+@@ -14,10 +14,8 @@
  #include "CubismFramework.hpp"
  #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
  
 -class TouchManager;
  class LAppSprite;
  class LAppModel;
+-class LAppSpriteShader;
  
-@@ -61,35 +60,11 @@ public:
+ /**
+ * @brief 描画クラス
+@@ -62,35 +60,11 @@ public:
      void InitializeSprite();
  
      /**
@@ -2670,7 +3088,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
      * @brief X座標をView座標に変換する。
      *
      * @param[in]       deviceX            デバイスX座標
-@@ -120,12 +95,12 @@ public:
+@@ -121,12 +95,12 @@ public:
      /**
       * @brief   モデル1体を描画する直前にコールされる
       */
@@ -2685,14 +3103,14 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
  
      /**
       * @brief   別レンダリングターゲットにモデルを描画するサンプルで
-@@ -147,16 +122,13 @@ public:
+@@ -148,18 +122,14 @@ public:
      void SetRenderTargetClearColor(float r, float g, float b);
  
  private:
 -    TouchManager* _touchManager;                 ///< タッチマネージャー
      Csm::CubismMatrix44* _deviceToScreen;    ///< デバイスからスクリーンへの行列
      Csm::CubismViewMatrix* _viewMatrix;      ///< viewMatrix
-     GLuint _programId;                       ///< シェーダID
++    GLuint _programId;                       ///< シェーダID
      LAppSprite* _back;                       ///< 背景画像
 -    LAppSprite* _gear;                       ///< ギア画像
 -    LAppSprite* _power;                      ///< 電源画像
@@ -2703,8 +3121,11 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
      Csm::Rendering::CubismOffscreenSurface_OpenGLES2 _renderBuffer;   ///< モードによってはCubismモデル結果をこっちにレンダリング
      SelectTarget _renderTarget;     ///< レンダリング先の選択肢
      float _clearColor[4];           ///< レンダリングターゲットのクリアカラー
+-
+-    LAppSpriteShader* _spriteShader;   ///< シェーダー作成委譲クラス
+ };
 diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.cpp ./demo_dev/src/LAppWavFileHandler.cpp
---- ./demo_clean/src/LAppWavFileHandler.cpp	2024-03-28 18:19:04.555847400 +0000
+--- ./demo_clean/src/LAppWavFileHandler.cpp	2025-03-23 03:36:39.011226300 +0000
 +++ ./demo_dev/src/LAppWavFileHandler.cpp	2023-03-05 23:22:10.921862800 +0000
 @@ -11,8 +11,7 @@
  #include "LAppPal.hpp"
@@ -2886,7 +3307,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.cpp ./demo_dev/sr
              }
          }
 diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.hpp ./demo_dev/src/LAppWavFileHandler.hpp
---- ./demo_clean/src/LAppWavFileHandler.hpp	2024-03-28 18:19:04.132172700 +0000
+--- ./demo_clean/src/LAppWavFileHandler.hpp	2025-03-23 03:36:38.433030700 +0000
 +++ ./demo_dev/src/LAppWavFileHandler.hpp	2023-03-05 23:22:10.871136700 +0000
 @@ -8,7 +8,7 @@
  #pragma once
@@ -3016,7 +3437,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.hpp ./demo_dev/sr
      Csm::csmUint32 _sampleOffset; ///< サンプル参照位置
      Csm::csmFloat32 _lastRms; ///< 最後に計測したRMS値
 diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/src/MouseActionManager.cpp
---- ./demo_clean/src/MouseActionManager.cpp	2024-03-28 18:19:04.195179800 +0000
+--- ./demo_clean/src/MouseActionManager.cpp	2025-03-23 03:36:38.520068400 +0000
 +++ ./demo_dev/src/MouseActionManager.cpp	2023-03-05 23:22:10.841970900 +0000
 @@ -1,9 +1,9 @@
 -﻿/**
@@ -3079,7 +3500,7 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/sr
  }
  
 diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/src/MouseActionManager.hpp
---- ./demo_clean/src/MouseActionManager.hpp	2024-03-28 18:19:04.336247400 +0000
+--- ./demo_clean/src/MouseActionManager.hpp	2025-03-23 03:36:38.688427700 +0000
 +++ ./demo_dev/src/MouseActionManager.hpp	2023-03-05 23:22:10.961094400 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -3088,7 +3509,7 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/sr
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/TouchManager.cpp ./demo_dev/src/TouchManager.cpp
---- ./demo_clean/src/TouchManager.cpp	2024-03-28 18:19:04.493378700 +0000
+--- ./demo_clean/src/TouchManager.cpp	2025-03-23 03:36:38.923124200 +0000
 +++ ./demo_dev/src/TouchManager.cpp	2023-03-05 23:22:10.861957900 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -3097,7 +3518,7 @@ diff -pruN --exclude build ./demo_clean/src/TouchManager.cpp ./demo_dev/src/Touc
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/TouchManager.hpp ./demo_dev/src/TouchManager.hpp
---- ./demo_clean/src/TouchManager.hpp	2024-03-28 18:19:03.612203500 +0000
+--- ./demo_clean/src/TouchManager.hpp	2025-03-23 03:36:37.652847100 +0000
 +++ ./demo_dev/src/TouchManager.hpp	2023-03-05 23:22:10.884102300 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -3106,9 +3527,9 @@ diff -pruN --exclude build ./demo_clean/src/TouchManager.hpp ./demo_dev/src/Touc
   *
   * Use of this source code is governed by the Live2D Open Software license
 diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
---- ./demo_clean/src/main.cpp	2024-03-28 18:19:03.894879200 +0000
+--- ./demo_clean/src/main.cpp	2025-03-23 03:36:38.089628300 +0000
 +++ ./demo_dev/src/main.cpp	2023-03-05 23:22:10.772150300 +0000
-@@ -1,22 +1,166 @@
+@@ -1,30 +1,166 @@
 -﻿/**
 +/**
   * Copyright(c) Live2D Inc. All rights reserved.
@@ -3131,14 +3552,12 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +
 +
  #include "LAppDelegate.hpp"
+-#include <windows.h>
 +#include "LAppLive2DManager.hpp"
 +#include "facial_landmark_detector.h"
- 
--int main()
++
 +struct CmdArgs
- {
--    // create the application instance
--    if (LAppDelegate::GetInstance()->Initialize() == GL_FALSE)
++{
 +    int windowWidth;
 +    int windowHeight;
 +    std::string windowTitle;
@@ -3169,8 +3588,7 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +
 +    int i = 1;
 +    while (i < argc)
-     {
--        return 1;
++    {
 +        std::string arg = argv[i];
 +        std::stringstream ss;
 +
@@ -3240,29 +3658,38 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
 +        }
 +
 +        i += 2;
-     }
- 
--    LAppDelegate::GetInstance()->Run();
++    }
++
 +    return cmdArgs;
 +}
-+
+ 
+-int main()
 +int main(int argc, char* argv[])
-+{
+ {
+-    // Setting the console character encoding to UTF-8
+-    UINT preConsoleOutputCP = GetConsoleOutputCP();
+-    SetConsoleOutputCP(65001);
 +    auto cmdArgs = parseArgv(argc, argv);
-+
+ 
+-    // create the application instance
+-    if (LAppDelegate::GetInstance()->Initialize() == GL_FALSE)
 +    LAppDelegate *delegate = LAppDelegate::GetInstance();
 +
 +    if (!delegate->Initialize(cmdArgs.windowWidth,
 +                              cmdArgs.windowHeight,
 +                              cmdArgs.windowTitle.c_str()))
-+    {
+     {
+-        SetConsoleOutputCP(preConsoleOutputCP);
+-        return 1;
 +        throw std::runtime_error("Unable to initialize LAppDelegate");
-+    }
-+
+     }
+ 
+-    LAppDelegate::GetInstance()->Run();
 +    delegate->SetRootDirectory(cmdArgs.rootDir);
 +
 +    FacialLandmarkDetector detector(cmdArgs.cfgPath);
-+
+ 
+-    SetConsoleOutputCP(preConsoleOutputCP);
 +    std::thread detectorThread(&FacialLandmarkDetector::mainLoop,
 +                               &detector);
 +
@@ -3283,7 +3710,7 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
  }
 -
 diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainMinimum.cpp
---- ./demo_clean/src/mainMinimum.cpp	2024-03-28 18:19:04.383534500 +0000
+--- ./demo_clean/src/mainMinimum.cpp	2025-03-23 03:36:38.779425400 +0000
 +++ ./demo_dev/src/mainMinimum.cpp	2023-03-05 23:22:10.854990900 +0000
 @@ -1,4 +1,4 @@
 -﻿/**

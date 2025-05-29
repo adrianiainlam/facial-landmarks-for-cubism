@@ -1,24 +1,26 @@
 diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
---- ./demo_clean/CMakeLists.txt	2025-03-23 03:36:37.047279100 +0000
-+++ ./demo_dev/CMakeLists.txt	2025-03-23 03:37:32.320173600 +0000
+--- ./demo_clean/CMakeLists.txt	2025-05-29 18:28:25.529155300 +0100
++++ ./demo_dev/CMakeLists.txt	2025-05-29 18:31:21.149457900 +0100
 @@ -9,7 +9,7 @@ option(
  # Set app name.
  set(APP_NAME Demo)
  # Set directory paths.
 -set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-+set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-5-r.3)
++set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CubismSdkForNative-5-r.4)
  set(CORE_PATH ${SDK_ROOT_PATH}/Core)
  set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/Framework)
  set(THIRD_PARTY_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/thirdParty)
-@@ -17,7 +17,6 @@ set(STB_PATH ${THIRD_PARTY_PATH}/stb)
+@@ -17,9 +17,6 @@ set(STB_PATH ${THIRD_PARTY_PATH}/stb)
  set(GLEW_PATH ${THIRD_PARTY_PATH}/glew)
  set(GLFW_PATH ${THIRD_PARTY_PATH}/glfw)
  set(RES_PATH ${SDK_ROOT_PATH}/Samples/Resources)
 -set(SAMPLE_SHADER_PATH ${SDK_ROOT_PATH}/Samples/OpenGL/Shaders/Standard)
+-set(FRAMEWORK_SHADER_PATH ${FRAMEWORK_PATH}/src/Rendering/OpenGL/Shaders/Standard)
+-set(COMMON_SRC_PATH ${SDK_ROOT_PATH}/Samples/Common)
  
  # Set project.
  project(${APP_NAME})
-@@ -42,7 +41,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE
+@@ -44,7 +41,7 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE
  set(BUILD_UTILS OFF CACHE BOOL "" FORCE)
  
  # Specify version of compiler.
@@ -27,7 +29,7 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  set(CMAKE_CXX_STANDARD_REQUIRED ON)
  set(CMAKE_CXX_EXTENSIONS OFF)
  
-@@ -55,7 +54,10 @@ else()
+@@ -57,7 +54,10 @@ else()
    message(FATAL_ERROR "[${APP_NAME}] Invalid linker flag ${CMAKE_EXE_LINKER_FLAGS}.")
  endif()
  # Detect compiler.
@@ -39,7 +41,7 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
    # Visual Studio 2015
    set(COMPILER 140)
  elseif(MSVC_VERSION GREATER_EQUAL 1910 AND MSVC_VERSION LESS 1920)
-@@ -64,7 +66,7 @@ elseif(MSVC_VERSION GREATER_EQUAL 1910 A
+@@ -66,7 +66,7 @@ elseif(MSVC_VERSION GREATER_EQUAL 1910 A
  elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1930)
    # Visual Studio 2019
    set(COMPILER 142)
@@ -48,7 +50,7 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
    # Visual Studio 2022
    set(COMPILER 143)
  elseif(MSVC)
-@@ -111,22 +113,26 @@ target_link_libraries(Framework Live2DCu
+@@ -113,24 +113,26 @@ target_link_libraries(Framework Live2DCu
  # Find opengl libraries.
  find_package(OpenGL REQUIRED)
  
@@ -57,6 +59,8 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
 +
  # Make executable app.
  add_executable(${APP_NAME})
+-# Add common source files.
+-add_subdirectory(${COMMON_SRC_PATH} ${CMAKE_CURRENT_BINARY_DIR}/src/Common)
  # Add source files.
  add_subdirectory(src)
 -
@@ -77,12 +81,13 @@ diff -pruN --exclude build ./demo_clean/CMakeLists.txt ./demo_dev/CMakeLists.txt
  # Build in multi-process.
  target_compile_options(${APP_NAME} PRIVATE /MP)
  
-@@ -134,8 +140,9 @@ target_compile_options(${APP_NAME} PRIVA
+@@ -138,9 +140,9 @@ target_compile_options(${APP_NAME} PRIVA
  add_custom_command(
    TARGET ${APP_NAME}
    POST_BUILD
 -  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RES_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/Resources
 -  COMMAND ${CMAKE_COMMAND} -E copy_directory ${SAMPLE_SHADER_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/SampleShaders
+-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${FRAMEWORK_SHADER_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/FrameworkShaders
 +  COMMAND
 +    ${CMAKE_COMMAND} -E
 +      copy_directory ${RES_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/Resources
@@ -126,15 +131,15 @@ diff -pruN --exclude build ./demo_clean/scripts/proj_msvc2013.bat ./demo_dev/scr
 +
 +pause & exit /b 0
 diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeLists.txt
---- ./demo_clean/src/CMakeLists.txt	2025-03-23 03:36:38.235304800 +0000
+--- ./demo_clean/src/CMakeLists.txt	2025-05-29 18:28:26.124897500 +0100
 +++ ./demo_dev/src/CMakeLists.txt	2023-03-05 23:22:10.976777100 +0000
-@@ -1,51 +1,22 @@
+@@ -1,41 +1,22 @@
 -if (CSM_MINIMUM_DEMO)
 -  target_sources(${APP_NAME}
 +target_sources(${APP_NAME}
    PRIVATE
-     ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.hpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.cpp
++    ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.hpp
      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.hpp
 +    ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.cpp
@@ -150,26 +155,18 @@ diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeL
      ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/LAppTextureManager.hpp
 -    ${CMAKE_CURRENT_SOURCE_DIR}/mainMinimum.cpp
--    ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.cpp
--    ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.hpp
 -    ${CMAKE_CURRENT_SOURCE_DIR}/CubismUserModelExtend.cpp
 -    ${CMAKE_CURRENT_SOURCE_DIR}/CubismUserModelExtend.hpp
--    ${CMAKE_CURRENT_SOURCE_DIR}/CubismSampleViewMatrix.cpp
--    ${CMAKE_CURRENT_SOURCE_DIR}/CubismSampleViewMatrix.hpp
 -    ${CMAKE_CURRENT_SOURCE_DIR}/MouseActionManager.cpp
 -    ${CMAKE_CURRENT_SOURCE_DIR}/MouseActionManager.hpp
 -  )
 -else ()
 -  target_sources(${APP_NAME}
 -    PRIVATE
--      ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.cpp
--      ${CMAKE_CURRENT_SOURCE_DIR}/LAppAllocator.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.cpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDefine.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.cpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppDelegate.hpp
--      ${CMAKE_CURRENT_SOURCE_DIR}/LAppWavFileHandler.cpp
--      ${CMAKE_CURRENT_SOURCE_DIR}/LAppWavFileHandler.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppLive2DManager.cpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppLive2DManager.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppModel.cpp
@@ -185,16 +182,120 @@ diff -pruN --exclude build ./demo_clean/src/CMakeLists.txt ./demo_dev/src/CMakeL
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.cpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.hpp
 -      ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
--      ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.cpp
--      ${CMAKE_CURRENT_SOURCE_DIR}/TouchManager.hpp
 -  )
 -endif ()
+-
+-target_include_directories(${APP_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 +    ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.cpp
 +    ${CMAKE_CURRENT_SOURCE_DIR}/LAppView.hpp
 +    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 +)
+diff -pruN --exclude build ./demo_clean/src/CubismSampleViewMatrix.cpp ./demo_dev/src/CubismSampleViewMatrix.cpp
+--- ./demo_clean/src/CubismSampleViewMatrix.cpp	1970-01-01 00:00:00.000000000 +0000
++++ ./demo_dev/src/CubismSampleViewMatrix.cpp	2023-03-05 23:22:10.816035400 +0000
+@@ -0,0 +1,70 @@
++﻿/**
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#include <GL/glew.h>
++#include <GLFW/glfw3.h>
++
++#include "CubismSampleViewMatrix.hpp"
++#include "LAppDefine.hpp"
++
++#include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
++
++CubismSampleViewMatrix::CubismSampleViewMatrix(Csm::CubismMatrix44*& deviceToScreen, int windowWidth, int windowHeight)
++    : CubismViewMatrix()
++{
++    if (windowWidth == 0 || windowHeight == 0)
++    {
++        return;
++    }
++
++    // 縦サイズを基準とする
++    float ratio = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
++    float left = -ratio;
++    float right = ratio;
++    float bottom = LAppDefine::ViewLogicalLeft;
++    float top = LAppDefine::ViewLogicalRight;
++
++    // デバイスに対応する画面の範囲を設定
++    SetScreenRect(left, right, bottom, top);
++
++    if (windowWidth > windowHeight)
++    {
++        float screenW = fabsf(right - left);
++        // 行列の拡大率を相対的に設定
++        deviceToScreen->ScaleRelative(screenW / windowWidth, -screenW / windowWidth);
++    }
++    else
++    {
++        float screenH = fabsf(top - bottom);
++        // 行列の拡大率を相対的に設定
++        deviceToScreen->ScaleRelative(screenH / windowHeight, -screenH / windowHeight);
++    }
++
++    // 行列の位置を起点に移動を行う
++    deviceToScreen->TranslateRelative(-windowWidth * 0.5f, -windowHeight * 0.5f);
++
++    // 拡大率を設定
++    Scale(LAppDefine::ViewScale, LAppDefine::ViewScale);
++
++    // 最大拡大率を設定
++    SetMaxScale(LAppDefine::ViewMaxScale);
++
++    // 最小拡大率を設定
++    SetMinScale(LAppDefine::ViewMinScale);
++
++    // デバイスに対応する論理座標上の移動可能範囲を設定
++    SetMaxScreenRect(
++        LAppDefine::ViewLogicalMaxLeft,
++        LAppDefine::ViewLogicalMaxRight,
++        LAppDefine::ViewLogicalMaxBottom,
++        LAppDefine::ViewLogicalMaxTop
++    );
++}
++
++CubismSampleViewMatrix::~CubismSampleViewMatrix()
++{
++}
+diff -pruN --exclude build ./demo_clean/src/CubismSampleViewMatrix.hpp ./demo_dev/src/CubismSampleViewMatrix.hpp
+--- ./demo_clean/src/CubismSampleViewMatrix.hpp	1970-01-01 00:00:00.000000000 +0000
++++ ./demo_dev/src/CubismSampleViewMatrix.hpp	2023-03-05 23:22:10.932824600 +0000
+@@ -0,0 +1,26 @@
++﻿/**
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#pragma once
++
++#include <CubismFramework.hpp>
++#include <Math/CubismViewMatrix.hpp>
++
++/**
++* @brief CubismViewMatrixを継承したクラス
++*
++* ビュー行列を Cubism で扱いやすいように機能を加えてラップしたもの。
++*
++*/
++class CubismSampleViewMatrix :
++    public Csm::CubismViewMatrix
++{
++public:
++    CubismSampleViewMatrix(Csm::CubismMatrix44*& deviceToScreen, int windowWidth, int windowHeight); ///< コンストラクタ
++
++    virtual ~CubismSampleViewMatrix(); ///< デストラクタ
++};
 diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev/src/CubismUserModelExtend.cpp
---- ./demo_clean/src/CubismUserModelExtend.cpp	2025-03-23 03:36:38.046874500 +0000
+--- ./demo_clean/src/CubismUserModelExtend.cpp	2025-05-29 18:28:26.015117200 +0100
 +++ ./demo_dev/src/CubismUserModelExtend.cpp	2023-03-05 23:22:10.780128700 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -202,7 +303,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -23,7 +23,7 @@
+@@ -23,11 +23,33 @@
  #include "CubismUserModelExtend.hpp"
  
  using namespace Live2D::Cubism::Framework;
@@ -210,22 +311,54 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
 +using namespace DefaultParameterId;
  using namespace LAppDefine;
  
- namespace {
-@@ -74,34 +74,17 @@ CubismUserModelExtend::~CubismUserModelE
++namespace {
++    /**
++    * @bref バッファの作成
++    *
++    * ファイルをバイトデータとして読み込む
++    */
++    csmByte* CreateBuffer(const csmChar* path, csmSizeInt* size)
++    {
++        return LAppPal::LoadFileAsBytes(path, size);
++    }
++
++    /**
++    * @bref バッファの消去
++    *
++    * バイトデータの解放
++    */
++    void DeleteBuffer(csmByte* buffer, const csmChar* path = "")
++    {
++        LAppPal::ReleaseBytes(buffer);
++    }
++}
++
+ CubismUserModelExtend::CubismUserModelExtend(const std::string modelDirectoryName, const std::string _currentModelDirectory)
+-    : LAppModel_Common()
++    : CubismUserModel()
+     , _modelJson(NULL)
+     , _userTimeSeconds(0.0f)
+     , _modelDirName(modelDirectoryName)
+@@ -52,34 +74,17 @@ CubismUserModelExtend::~CubismUserModelE
      delete _textureManager;
  }
  
 -std::string CubismUserModelExtend::MakeAssetPath(const std::string& assetFileName)
--{
--    return _currentModelDirectory + assetFileName;
--}
--
--void CubismUserModelExtend::SetAssetDirectory(const std::string& path)
 +void CubismUserModelExtend::LoadAssets(const Csm::csmChar* fileName)
  {
+-    return _currentModelDirectory + assetFileName;
+-}
++    csmSizeInt size;
++    const csmString path = csmString(_currentModelDirectory.c_str()) + fileName;
+ 
+-void CubismUserModelExtend::SetAssetDirectory(const std::string& path)
+-{
 -    _currentModelDirectory = path;
 -}
--
++    csmByte* buffer = CreateBuffer(path.GetRawString(), &size);
++    _modelJson = new CubismModelSettingJson(buffer, size);
++    DeleteBuffer(buffer, path.GetRawString());
+ 
 -void CubismUserModelExtend::LoadAsset(const std::string & fiileName, const std::function<void(Csm::csmByte*, Csm::csmSizeInt)>& afterLoadCallback)
 -{
 -    Csm::csmSizeInt bufferSize = 0;
@@ -235,15 +368,10 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
 -    {
 -        return;
 -    }
-+    csmSizeInt size;
-+    const csmString path = csmString(_currentModelDirectory.c_str()) + fileName;
- 
+-
 -    // バッファの設定
 -    buffer = LAppPal::LoadFileAsBytes(MakeAssetPath(fiileName).c_str(), &bufferSize);
-+    csmByte* buffer = CreateBuffer(path.GetRawString(), &size);
-+    _modelJson = new CubismModelSettingJson(buffer, size);
-+    DeleteBuffer(buffer, path.GetRawString());
- 
+-
 -    // コールバック関数の呼び出し
 -    afterLoadCallback(buffer, bufferSize);
 -
@@ -254,7 +382,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  }
  
  void CubismUserModelExtend::SetupModel()
-@@ -109,44 +92,75 @@ void CubismUserModelExtend::SetupModel()
+@@ -87,44 +92,75 @@ void CubismUserModelExtend::SetupModel()
      _updating = true;
      _initialized = false;
  
@@ -355,7 +483,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  
      // Layout
      csmMap<csmString, csmFloat32> layout;
-@@ -194,17 +208,28 @@ void CubismUserModelExtend::PreloadMotio
+@@ -172,18 +208,29 @@ void CubismUserModelExtend::PreloadMotio
          csmSizeInt size;
          buffer = CreateBuffer(path.GetRawString(), &size);
          // モーションデータの読み込み
@@ -381,18 +509,19 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
 +        if (fadeTime >= 0.0f)
 +        {
 +            tmpMotion->SetFadeOutTime(fadeTime);
-+        }
-+
+         }
+ 
 +        if (_motions[name])
 +        {
 +            // インスタンスを破棄
 +            ACubismMotion::Delete(_motions[name]);
-         }
++        }
 +        _motions[name] = tmpMotion;
- 
++
          DeleteBuffer(buffer, path.GetRawString());
      }
-@@ -237,9 +262,10 @@ void CubismUserModelExtend::ReleaseModel
+ }
+@@ -215,9 +262,10 @@ void CubismUserModelExtend::ReleaseModel
  * @param[in]   group                       モーショングループ名
  * @param[in]   no                          グループ内の番号
  * @param[in]   priority                    優先度
@@ -404,7 +533,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  {
      // モーション数が取得出来なかった、もしくは0の時
      if (!(_modelJson->GetMotionCount(group)))
-@@ -275,16 +301,30 @@ Csm::CubismMotionQueueEntryHandle Cubism
+@@ -253,16 +301,30 @@ Csm::CubismMotionQueueEntryHandle Cubism
          csmSizeInt size;
          buffer = CreateBuffer(path.GetRawString(), &size);
          // 一番先頭のモーションを読み込む
@@ -439,7 +568,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
  
      // 優先度を設定してモーションを始める
      return  _motionManager->StartMotionPriority(motion, autoDelete, priority);
-@@ -323,16 +363,6 @@ void CubismUserModelExtend::ModelParamUp
+@@ -301,16 +363,6 @@ void CubismUserModelExtend::ModelParamUp
      _model->SaveParameters();
      //-----------------------------------------------------------------
  
@@ -456,7 +585,7 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
      if (_expressionManager)
      {
          // 表情でパラメータ更新（相対変化）
-@@ -355,12 +385,6 @@ void CubismUserModelExtend::ModelParamUp
+@@ -333,12 +385,6 @@ void CubismUserModelExtend::ModelParamUp
      _model->AddParameterValue(_idParamEyeBallX, _dragX); // -1から1の値を加える
      _model->AddParameterValue(_idParamEyeBallY, _dragY);
  
@@ -470,9 +599,26 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.cpp ./demo_dev
      if (_physics)
      {
 diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev/src/CubismUserModelExtend.hpp
---- ./demo_clean/src/CubismUserModelExtend.hpp	2025-03-23 03:36:38.131318200 +0000
+--- ./demo_clean/src/CubismUserModelExtend.hpp	2025-05-29 18:28:26.062387400 +0100
 +++ ./demo_dev/src/CubismUserModelExtend.hpp	2023-03-05 23:22:10.986750400 +0000
-@@ -27,17 +27,13 @@ class CubismUserModelExtend :
+@@ -10,10 +10,10 @@
+ #include <functional>
+ 
+ #include <CubismFramework.hpp>
++#include <Model/CubismUserModel.hpp>
+ #include <CubismModelSettingJson.hpp>
+ 
+ #include "LAppTextureManager.hpp"
+-#include "LAppModel_Common.hpp"
+ 
+  /**
+  * @brief CubismUserModelを継承するサンプルクラス
+@@ -23,21 +23,17 @@
+  *
+  */
+ class CubismUserModelExtend :
+-    public LAppModel_Common
++    public Csm::CubismUserModel
  {
  public:
      CubismUserModelExtend(const std::string modelDirectoryName, const std::string _currentModelDirectory); ///< コンストラクタ
@@ -542,34 +688,121 @@ diff -pruN --exclude build ./demo_clean/src/CubismUserModelExtend.hpp ./demo_dev
      /**
      * @brief 解放
 diff -pruN --exclude build ./demo_clean/src/LAppAllocator.cpp ./demo_dev/src/LAppAllocator.cpp
---- ./demo_clean/src/LAppAllocator.cpp	2025-03-23 03:36:37.920013100 +0000
+--- ./demo_clean/src/LAppAllocator.cpp	1970-01-01 00:00:00.000000000 +0000
 +++ ./demo_dev/src/LAppAllocator.cpp	2023-03-05 23:22:10.847976000 +0000
-@@ -1,4 +1,4 @@
--﻿/**
+@@ -0,0 +1,54 @@
 +/**
-  * Copyright(c) Live2D Inc. All rights reserved.
-  *
-  * Use of this source code is governed by the Live2D Open Software license
-@@ -9,7 +9,7 @@
- 
- using namespace Csm;
- 
--void* LAppAllocator::Allocate(const csmSizeType  size)
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#include "LAppAllocator.hpp"
++
++using namespace Csm;
++
 +void* LAppAllocator::Allocate(const csmSizeType size)
- {
-     return malloc(size);
- }
++{
++    return malloc(size);
++}
++
++void LAppAllocator::Deallocate(void* memory)
++{
++    free(memory);
++}
++
++void* LAppAllocator::AllocateAligned(const csmSizeType size, const csmUint32 alignment)
++{
++    size_t offset, shift, alignedAddress;
++    void* allocation;
++    void** preamble;
++
++    offset = alignment - 1 + sizeof(void*);
++
++    allocation = Allocate(size + static_cast<csmUint32>(offset));
++
++    alignedAddress = reinterpret_cast<size_t>(allocation) + sizeof(void*);
++
++    shift = alignedAddress % alignment;
++
++    if (shift)
++    {
++        alignedAddress += (alignment - shift);
++    }
++
++    preamble = reinterpret_cast<void**>(alignedAddress);
++    preamble[-1] = allocation;
++
++    return reinterpret_cast<void*>(alignedAddress);
++}
++
++void LAppAllocator::DeallocateAligned(void* alignedMemory)
++{
++    void** preamble;
++
++    preamble = static_cast<void**>(alignedMemory);
++
++    Deallocate(preamble[-1]);
++}
 diff -pruN --exclude build ./demo_clean/src/LAppAllocator.hpp ./demo_dev/src/LAppAllocator.hpp
---- ./demo_clean/src/LAppAllocator.hpp	2025-03-23 03:36:38.879598000 +0000
+--- ./demo_clean/src/LAppAllocator.hpp	1970-01-01 00:00:00.000000000 +0000
 +++ ./demo_dev/src/LAppAllocator.hpp	2023-03-05 23:22:10.953083600 +0000
-@@ -1,4 +1,4 @@
--﻿/**
+@@ -0,0 +1,52 @@
 +/**
-  * Copyright(c) Live2D Inc. All rights reserved.
-  *
-  * Use of this source code is governed by the Live2D Open Software license
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#pragma once
++
++#include <CubismFramework.hpp>
++#include <ICubismAllocator.hpp>
++
++/**
++* @brief メモリアロケーションを実装するクラス。
++*
++* メモリ確保・解放処理のインターフェースの実装。
++* フレームワークから呼び出される。
++*
++*/
++class LAppAllocator : public Csm::ICubismAllocator
++{
++    /**
++    * @brief  メモリ領域を割り当てる。
++    *
++    * @param[in]   size    割り当てたいサイズ。
++    * @return  指定したメモリ領域
++    */
++    void* Allocate(const Csm::csmSizeType size);
++
++    /**
++    * @brief   メモリ領域を解放する
++    *
++    * @param[in]   memory    解放するメモリ。
++    */
++    void Deallocate(void* memory);
++
++    /**
++    * @brief
++    *
++    * @param[in]   size         割り当てたいサイズ。
++    * @param[in]   alignment    割り当てたいサイズ。
++    * @return  alignedAddress
++    */
++    void* AllocateAligned(const Csm::csmSizeType size, const Csm::csmUint32 alignment);
++
++    /**
++    * @brief
++    *
++    * @param[in]   alignedMemory    解放するメモリ。
++    */
++    void DeallocateAligned(void* alignedMemory);
++};
 diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDefine.cpp
---- ./demo_clean/src/LAppDefine.cpp	2025-03-23 03:36:38.612775000 +0000
+--- ./demo_clean/src/LAppDefine.cpp	2025-05-29 18:28:26.266338300 +0100
 +++ ./demo_dev/src/LAppDefine.cpp	2023-03-05 23:22:10.995458800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -613,18 +846,20 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.cpp ./demo_dev/src/LAppDe
      // 外部定義ファイル(json)と合わせる
      const csmChar* MotionGroupIdle = "Idle"; // アイドリング
      const csmChar* MotionGroupTapBody = "TapBody"; // 体をタップしたとき
-@@ -59,9 +64,6 @@ namespace LAppDefine {
+@@ -59,11 +64,6 @@ namespace LAppDefine {
      const csmInt32 PriorityNormal = 2;
      const csmInt32 PriorityForce = 3;
  
 -    // MOC3の整合性検証オプション
 -    const csmBool MocConsistencyValidationEnable = true;
+-    // motion3.jsonの整合性検証オプション
+-    const csmBool MotionConsistencyValidationEnable = true;
 -
      // デバッグ用ログの表示オプション
      const csmBool DebugLogEnable = true;
      const csmBool DebugTouchLogEnable = false;
 diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDefine.hpp
---- ./demo_clean/src/LAppDefine.hpp	2025-03-23 03:36:37.737316700 +0000
+--- ./demo_clean/src/LAppDefine.hpp	2025-05-29 18:28:25.842413200 +0100
 +++ ./demo_dev/src/LAppDefine.hpp	2023-03-05 23:22:10.947784100 +0000
 @@ -1,9 +1,10 @@
 -﻿/**
@@ -653,17 +888,18 @@ diff -pruN --exclude build ./demo_clean/src/LAppDefine.hpp ./demo_dev/src/LAppDe
                                                      // 外部定義ファイル(json)と合わせる
      extern const csmChar* MotionGroupIdle;          ///< アイドリング時に再生するモーションのリスト
      extern const csmChar* MotionGroupTapBody;       ///< 体をタップした時に再生するモーションのリスト
-@@ -54,8 +54,6 @@ namespace LAppDefine {
+@@ -54,9 +54,6 @@ namespace LAppDefine {
      extern const csmInt32 PriorityNormal;           ///< モーションの優先度定数: 2
      extern const csmInt32 PriorityForce;            ///< モーションの優先度定数: 3
  
 -    extern const csmBool MocConsistencyValidationEnable; ///< MOC3の整合性検証機能の有効・無効
+-    extern const csmBool MotionConsistencyValidationEnable; ///< motion3.jsonの整合性検証機能の有効・無効
 -
                                                      // デバッグ用ログの表示
      extern const csmBool DebugLogEnable;            ///< デバッグ用ログ表示の有効・無効
      extern const csmBool DebugTouchLogEnable;       ///< タッチ処理のデバッグ用ログ表示の有効・無効
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LAppDelegate.cpp
---- ./demo_clean/src/LAppDelegate.cpp	2025-03-23 03:36:37.873913500 +0000
+--- ./demo_clean/src/LAppDelegate.cpp	2025-05-29 18:28:25.936605800 +0100
 +++ ./demo_dev/src/LAppDelegate.cpp	2023-03-05 23:22:10.975780100 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -731,38 +967,40 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
          }
          glfwTerminate();
          return GL_FALSE;
-@@ -93,22 +101,24 @@ bool LAppDelegate::Initialize()
-     glEnable(GL_BLEND);
-     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+@@ -91,11 +99,7 @@ bool LAppDelegate::Initialize()
  
+     //透過設定
+     glEnable(GL_BLEND);
+-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+-
 -    //コールバック関数の登録
 -    glfwSetMouseButtonCallback(_window, EventHandler::OnMouseCallBack);
 -    glfwSetCursorPosCallback(_window, EventHandler::OnMouseCallBack);
--
++    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+ 
      // ウィンドウサイズ記憶
      int width, height;
-     glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
+@@ -103,11 +107,17 @@ bool LAppDelegate::Initialize()
      _windowWidth = width;
      _windowHeight = height;
  
 -    // Cubism SDK の初期化
--    InitializeCubism();
--
-     //AppViewの初期化
-     _view->Initialize();
- 
-+    // Cubism3の初期化
-+    InitializeCubism();
++    //AppViewの初期化
++    _view->Initialize();
 +
++    // Cubism3の初期化
+     InitializeCubism();
+ 
+-    //AppViewの初期化
+-    _view->Initialize(width, height);
 +    //load model
 +    LAppLive2DManager::GetInstance();
 +
 +    //load sprite
 +    _view->InitializeSprite();
-+
+ 
      return GL_TRUE;
  }
- 
 @@ -125,7 +135,7 @@ void LAppDelegate::Release()
      // リソースを解放
      LAppLive2DManager::ReleaseInstance();
@@ -780,8 +1018,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
 +        if((_windowWidth!=width || _windowHeight!=height) && width>0 && height>0)
          {
 -            //AppViewの初期化
-             _view->Initialize();
+-            _view->Initialize(width, height);
 -            // スプライトサイズを再設定
++            _view->Initialize();
              _view->ResizeSprite();
 -            // サイズを保存しておく
 +
@@ -801,7 +1040,14 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
      _view = new LAppView();
      _textureManager = new LAppTextureManager();
  }
-@@ -202,54 +208,72 @@ void LAppDelegate::InitializeCubism()
+@@ -197,61 +203,77 @@ void LAppDelegate::InitializeCubism()
+     //setup cubism
+     _cubismOption.LogFunction = LAppPal::PrintMessage;
+     _cubismOption.LoggingLevel = LAppDefine::CubismLoggingLevel;
+-    _cubismOption.LoadFileFunction = LAppPal::LoadFileAsBytes;
+-    _cubismOption.ReleaseBytesFunction = LAppPal::ReleaseBytes;
+     Csm::CubismFramework::StartUp(&_cubismAllocator, &_cubismOption);
+ 
      //Initialize cubism
      CubismFramework::Initialize();
  
@@ -910,7 +1156,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.cpp ./demo_dev/src/LApp
 +    return elems;
  }
 diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LAppDelegate.hpp
---- ./demo_clean/src/LAppDelegate.hpp	2025-03-23 03:36:38.383882300 +0000
+--- ./demo_clean/src/LAppDelegate.hpp	2025-05-29 18:28:26.187813200 +0100
 +++ ./demo_dev/src/LAppDelegate.hpp	2023-03-05 23:22:10.789104800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -918,18 +1164,19 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -7,8 +7,10 @@
+@@ -7,16 +7,18 @@
  
  #pragma once
  
 +#include <string>
  #include <GL/glew.h>
  #include <GLFW/glfw3.h>
+-#include "LAppAllocator_Common.hpp"
 +#include "Type/csmVector.hpp"
- #include "LAppAllocator.hpp"
++#include "LAppAllocator.hpp"
  
  class LAppView;
-@@ -16,7 +18,7 @@ class LAppTextureManager;
+ class LAppTextureManager;
  
  /**
  * @brief   アプリケーションクラス。
@@ -1005,7 +1252,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
      */
      void InitializeCubism();
  
--    LAppAllocator _cubismAllocator;              ///< Cubism SDK Allocator
+-    LAppAllocator_Common _cubismAllocator;              ///< Cubism SDK Allocator
 -    Csm::CubismFramework::Option _cubismOption;  ///< Cubism SDK Option
 +    /**
 +     * @brief   文字列を指定の文字で切り分ける
@@ -1048,7 +1295,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppDelegate.hpp ./demo_dev/src/LApp
 -
 -};
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src/LAppLive2DManager.cpp
---- ./demo_clean/src/LAppLive2DManager.cpp	2025-03-23 03:36:38.336819400 +0000
+--- ./demo_clean/src/LAppLive2DManager.cpp	2025-05-29 18:28:26.172173900 +0100
 +++ ./demo_dev/src/LAppLive2DManager.cpp	2023-03-05 23:22:10.967799000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -1349,7 +1596,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.cpp ./demo_dev/src
 +    _translateY = translateY;
 +}
 diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src/LAppLive2DManager.hpp
---- ./demo_clean/src/LAppLive2DManager.hpp	2025-03-23 03:36:39.098754200 +0000
+--- ./demo_clean/src/LAppLive2DManager.hpp	2025-05-29 18:28:26.454266400 +0100
 +++ ./demo_dev/src/LAppLive2DManager.hpp	2023-03-05 23:22:10.829032000 +0000
 @@ -1,18 +1,20 @@
 -﻿/**
@@ -1465,7 +1712,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppLive2DManager.hpp ./demo_dev/src
 +    float _translateY;
  };
 diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppModel.cpp
---- ./demo_clean/src/LAppModel.cpp	2025-03-23 03:36:38.969736900 +0000
+--- ./demo_clean/src/LAppModel.cpp	2025-05-29 18:28:26.423050700 +0100
 +++ ./demo_dev/src/LAppModel.cpp	2024-03-28 18:26:32.604595000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -1473,7 +1720,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -21,6 +21,8 @@
+@@ -21,35 +21,50 @@
  #include "LAppTextureManager.hpp"
  #include "LAppDelegate.hpp"
  
@@ -1482,39 +1729,43 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  using namespace Live2D::Cubism::Framework;
  using namespace Live2D::Cubism::Framework::DefaultParameterId;
  using namespace LAppDefine;
-@@ -30,7 +32,7 @@ namespace {
-     {
-         if (DebugLogEnable)
-         {
--            LAppPal::PrintLogLn("[APP]create buffer: %s ", path);
-+            LAppPal::PrintLog("[APP]create buffer: %s ", path);
-         }
-         return LAppPal::LoadFileAsBytes(path, size);
-     }
-@@ -39,33 +41,30 @@ namespace {
-     {
-         if (DebugLogEnable)
-         {
--            LAppPal::PrintLogLn("[APP]delete buffer: %s", path);
-+            LAppPal::PrintLog("[APP]delete buffer: %s", path);
-         }
-         LAppPal::ReleaseBytes(buffer);
-     }
- }
  
 -LAppModel::LAppModel()
+-    : LAppModel_Common()
+-    , _modelSetting(NULL)
+-    , _userTimeSeconds(0.0f)
+-{
+-    if (MocConsistencyValidationEnable)
++namespace {
++    csmByte* CreateBuffer(const csmChar* path, csmSizeInt* size)
+     {
+-        _mocConsistency = true;
++        if (DebugLogEnable)
++        {
++            LAppPal::PrintLog("[APP]create buffer: %s ", path);
++        }
++        return LAppPal::LoadFileAsBytes(path, size);
+     }
+-    if (MotionConsistencyValidationEnable)
++
++    void DeleteBuffer(csmByte* buffer, const csmChar* path = "")
+     {
+-        _motionConsistency = true;
++        if (DebugLogEnable)
++        {
++            LAppPal::PrintLog("[APP]delete buffer: %s", path);
++        }
++        LAppPal::ReleaseBytes(buffer);
+     }
++}
+ 
 +LAppModel::LAppModel(bool useOldParamId)
-     : CubismUserModel()
-     , _modelSetting(NULL)
-     , _userTimeSeconds(0.0f)
++    : CubismUserModel()
++    , _modelSetting(NULL)
++    , _userTimeSeconds(0.0f)
 +    , _detector(nullptr)
 +    , _useOldParamId(useOldParamId)
- {
--    if (MocConsistencyValidationEnable)
--    {
--        _mocConsistency = true;
--    }
--
++{
      if (DebugLogEnable)
      {
          _debugMode = true;
@@ -1535,7 +1786,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  }
  
  LAppModel::~LAppModel()
-@@ -89,7 +88,7 @@ void LAppModel::LoadAssets(const csmChar
+@@ -73,7 +88,7 @@ void LAppModel::LoadAssets(const csmChar
  
      if (_debugMode)
      {
@@ -1544,7 +1795,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      csmSizeInt size;
-@@ -101,17 +100,12 @@ void LAppModel::LoadAssets(const csmChar
+@@ -85,17 +100,12 @@ void LAppModel::LoadAssets(const csmChar
  
      SetupModel(setting);
  
@@ -1563,7 +1814,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  void LAppModel::SetupModel(ICubismModelSetting* setting)
  {
      _updating = true;
-@@ -130,41 +124,14 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -114,41 +124,14 @@ void LAppModel::SetupModel(ICubismModelS
  
          if (_debugMode)
          {
@@ -1607,7 +1858,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Physics
      if (strcmp(_modelSetting->GetPhysicsFileName(), "") != 0)
      {
-@@ -203,7 +170,7 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -187,7 +170,7 @@ void LAppModel::SetupModel(ICubismModelS
          breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
          breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamAngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
          breathParameters.PushBack(CubismBreath::BreathParameterData(_idParamBodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
@@ -1616,7 +1867,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  
          _breath->SetParameters(breathParameters);
      }
-@@ -227,21 +194,6 @@ void LAppModel::SetupModel(ICubismModelS
+@@ -211,21 +194,6 @@ void LAppModel::SetupModel(ICubismModelS
          }
      }
  
@@ -1638,7 +1889,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      //Layout
      csmMap<csmString, csmFloat32> layout;
      _modelSetting->GetLayoutMap(layout);
-@@ -274,24 +226,32 @@ void LAppModel::PreloadMotionGroup(const
+@@ -258,24 +226,32 @@ void LAppModel::PreloadMotionGroup(const
  
          if (_debugMode)
          {
@@ -1649,7 +1900,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
          csmByte* buffer;
          csmSizeInt size;
          buffer = CreateBuffer(path.GetRawString(), &size);
--        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString(), NULL, NULL, _modelSetting, group, i));
+-        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString(), NULL, NULL, _modelSetting, group, i, _motionConsistency));
 +        CubismMotion* tmpMotion = static_cast<CubismMotion*>(LoadMotion(buffer, size, name.GetRawString()));
  
 -        if (tmpMotion)
@@ -1669,18 +1920,18 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 +        if (fadeTime >= 0.0f)
 +        {
 +            tmpMotion->SetFadeOutTime(fadeTime);
-         }
++        }
 +        tmpMotion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
 +
 +        if (_motions[name] != NULL)
 +        {
 +            ACubismMotion::Delete(_motions[name]);
-+        }
+         }
 +        _motions[name] = tmpMotion;
  
          DeleteBuffer(buffer, path.GetRawString());
      }
-@@ -346,62 +306,57 @@ void LAppModel::Update()
+@@ -330,62 +306,57 @@ void LAppModel::Update()
      const csmFloat32 deltaTimeSeconds = LAppPal::GetDeltaTime();
      _userTimeSeconds += deltaTimeSeconds;
  
@@ -1705,12 +1956,12 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
 -    }
 -    _model->SaveParameters(); // 状態を保存
 -    //-----------------------------------------------------------------
+-
+-    // 不透明度
+-    _opacity = _model->GetModelOpacity();
 +        auto idMan = CubismFramework::GetIdManager();
 +        auto params = _detector->getParams();
  
--    // 不透明度
--    _opacity = _model->GetModelOpacity();
--
 -    // まばたき
 -    if (!motionUpdated)
 -    {
@@ -1788,7 +2039,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  
      // 物理演算の設定
-@@ -410,22 +365,6 @@ void LAppModel::Update()
+@@ -394,22 +365,6 @@ void LAppModel::Update()
          _physics->Evaluate(_model, deltaTimeSeconds);
      }
  
@@ -1811,7 +2062,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      // ポーズの設定
      if (_pose != NULL)
      {
-@@ -436,7 +375,7 @@ void LAppModel::Update()
+@@ -420,7 +375,7 @@ void LAppModel::Update()
  
  }
  
@@ -1820,7 +2071,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  {
      if (priority == PriorityForce)
      {
-@@ -446,7 +385,7 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -430,7 +385,7 @@ CubismMotionQueueEntryHandle LAppModel::
      {
          if (_debugMode)
          {
@@ -1829,24 +2080,31 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
          }
          return InvalidMotionQueueEntryHandleValue;
      }
-@@ -466,19 +405,25 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -450,27 +405,25 @@ CubismMotionQueueEntryHandle LAppModel::
          csmByte* buffer;
          csmSizeInt size;
          buffer = CreateBuffer(path.GetRawString(), &size);
--        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler, onBeganMotionHandler, _modelSetting, group, no));
+-        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler, onBeganMotionHandler, _modelSetting, group, no, _motionConsistency));
+-
+-        if (motion)
 +        motion = static_cast<CubismMotion*>(LoadMotion(buffer, size, NULL, onFinishedMotionHandler));
 +        csmFloat32 fadeTime = _modelSetting->GetMotionFadeInTimeValue(group, no);
-+        if (fadeTime >= 0.0f)
-+        {
-+            motion->SetFadeInTime(fadeTime);
-+        }
- 
--        if  (motion)
-+        fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, no);
 +        if (fadeTime >= 0.0f)
          {
 -            motion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
 -            autoDelete = true; // 終了時にメモリから削除
++            motion->SetFadeInTime(fadeTime);
+         }
+-        else
++
++        fadeTime = _modelSetting->GetMotionFadeOutTimeValue(group, no);
++        if (fadeTime >= 0.0f)
+         {
+-            CubismLogError("Can't start motion %s .", path.GetRawString());
+-            // ロードできなかったモーションのReservePriorityをリセットする
+-            _motionManager->SetReservePriority(PriorityNone);
+-            DeleteBuffer(buffer, path.GetRawString());
+-            return InvalidMotionQueueEntryHandleValue;
 +            motion->SetFadeOutTime(fadeTime);
          }
 +        motion->SetEffectIds(_eyeBlinkIds, _lipSyncIds);
@@ -1860,7 +2118,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
          motion->SetFinishedMotionHandler(onFinishedMotionHandler);
      }
  
-@@ -488,17 +433,16 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -480,17 +433,16 @@ CubismMotionQueueEntryHandle LAppModel::
      {
          csmString path = voice;
          path = _modelHomeDir + path;
@@ -1880,7 +2138,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  {
      if (_modelSetting->GetMotionCount(group) == 0)
      {
-@@ -507,7 +451,7 @@ CubismMotionQueueEntryHandle LAppModel::
+@@ -499,7 +451,7 @@ CubismMotionQueueEntryHandle LAppModel::
  
      csmInt32 no = rand() % _modelSetting->GetMotionCount(group);
  
@@ -1889,7 +2147,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  }
  
  void LAppModel::DoDraw()
-@@ -558,16 +502,16 @@ void LAppModel::SetExpression(const csmC
+@@ -550,16 +502,16 @@ void LAppModel::SetExpression(const csmC
      ACubismMotion* motion = _expressions[expressionID];
      if (_debugMode)
      {
@@ -1909,7 +2167,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
      }
  }
  
-@@ -641,29 +585,36 @@ Csm::Rendering::CubismOffscreenSurface_O
+@@ -633,29 +585,36 @@ Csm::Rendering::CubismOffscreenSurface_O
      return _renderBuffer;
  }
  
@@ -1965,7 +2223,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.cpp ./demo_dev/src/LAppMod
  }
 +
 diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppModel.hpp
---- ./demo_clean/src/LAppModel.hpp	2025-03-23 03:36:38.828478700 +0000
+--- ./demo_clean/src/LAppModel.hpp	2025-05-29 18:28:26.391768300 +0100
 +++ ./demo_dev/src/LAppModel.hpp	2024-03-28 18:25:30.566916900 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -1973,16 +2231,27 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -13,7 +13,7 @@
+@@ -8,25 +8,28 @@
+ #pragma once
+ 
+ #include <CubismFramework.hpp>
++#include <Model/CubismUserModel.hpp>
+ #include <ICubismModelSetting.hpp>
  #include <Type/csmRectF.hpp>
  #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
  
--#include "LAppWavFileHandler.hpp"
+-#include "LAppWavFileHandler_Common.hpp"
+-#include "LAppModel_Common.hpp"
 +#include "facial_landmark_detector.h"
  
  /**
   * @brief ユーザーが実際に使用するモデルの実装クラス<br>
-@@ -25,8 +25,11 @@ class LAppModel : public Csm::CubismUser
+  *         モデル生成、機能コンポーネント生成、更新処理とレンダリングの呼び出しを行う。
+  *
+  */
+-class LAppModel : public LAppModel_Common
++class LAppModel : public Csm::CubismUserModel
+ {
  public:
      /**
       * @brief コンストラクタ
@@ -2057,7 +2326,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
      const Csm::CubismId* _idParamEyeBallX; ///< パラメータID: ParamEyeBallX
      const Csm::CubismId* _idParamEyeBallY; ///< パラメータID: ParamEyeBallXY
  
--    LAppWavFileHandler _wavFileHandler; ///< wavファイルハンドラ
+-    LAppWavFileHandler_Common _wavFileHandler; ///< wavファイルハンドラ
 +    Csm::Rendering::CubismOffscreenSurface_OpenGLES2 _renderBuffer;   ///< フレームバッファ以外の描画先
  
 -    Csm::Rendering::CubismOffscreenSurface_OpenGLES2  _renderBuffer;   ///< フレームバッファ以外の描画先
@@ -2067,7 +2336,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppModel.hpp ./demo_dev/src/LAppMod
 +
 +
 diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.cpp
---- ./demo_clean/src/LAppPal.cpp	2025-03-23 03:36:38.287821100 +0000
+--- ./demo_clean/src/LAppPal.cpp	2025-05-29 18:28:26.140522600 +0100
 +++ ./demo_dev/src/LAppPal.cpp	2023-03-05 23:22:10.834981800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2087,7 +2356,13 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
  #include <stdarg.h>
  #include <sys/stat.h>
  #include <iostream>
-@@ -28,55 +29,30 @@ double LAppPal::s_deltaTime = 0.0;
+@@ -25,61 +26,33 @@ using namespace LAppDefine;
+ double LAppPal::s_currentFrame = 0.0;
+ double LAppPal::s_lastFrame = 0.0;
+ double LAppPal::s_deltaTime = 0.0;
+-#ifdef CSM_FIXED_FRAME_RATE
+-int LAppPal::s_frame = 0;
+-#endif
  
  csmByte* LAppPal::LoadFileAsBytes(const string filePath, csmSizeInt* outSize)
  {
@@ -2155,7 +2430,20 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
      return reinterpret_cast<csmByte*>(buf);
  }
  
-@@ -102,28 +78,8 @@ void LAppPal::PrintLog(const csmChar* fo
+@@ -95,12 +68,7 @@ csmFloat32  LAppPal::GetDeltaTime()
+ 
+ void LAppPal::UpdateTime()
+ {
+-#ifndef CSM_FIXED_FRAME_RATE
+     s_currentFrame = glfwGetTime();
+-#else
+-    s_frame += 1;
+-    s_currentFrame = s_frame / CSM_FIXED_FRAME_RATE;
+-#endif
+     s_deltaTime = s_currentFrame - s_lastFrame;
+     s_lastFrame = s_currentFrame;
+ }
+@@ -110,28 +78,8 @@ void LAppPal::PrintLog(const csmChar* fo
      va_list args;
      csmChar buf[256];
      va_start(args, format);
@@ -2186,7 +2474,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
      va_end(args);
  }
  
-@@ -131,18 +87,3 @@ void LAppPal::PrintMessage(const csmChar
+@@ -139,18 +87,3 @@ void LAppPal::PrintMessage(const csmChar
  {
      PrintLog("%s", message);
  }
@@ -2206,7 +2494,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.cpp ./demo_dev/src/LAppPal.c
 -    return WideCharToMultiByte(CP_UTF8, 0U, wide, -1, multiByte, multiByteSize, NULL, NULL) != 0;
 -}
 diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.hpp
---- ./demo_clean/src/LAppPal.hpp	2025-03-23 03:36:38.181753100 +0000
+--- ./demo_clean/src/LAppPal.hpp	2025-05-29 18:28:26.093651500 +0100
 +++ ./demo_dev/src/LAppPal.hpp	2023-03-05 23:22:10.939820800 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2214,7 +2502,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -8,6 +8,7 @@
+@@ -8,16 +8,10 @@
  #pragma once
  
  #include <CubismFramework.hpp>
@@ -2222,7 +2510,17 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
  #include <string>
  
  /**
-@@ -62,17 +63,6 @@ public:
+- * @brief フレームレート固定機能
+- *
+- * フレームレートを指定の値に固定する
+- */
+-//#define CSM_FIXED_FRAME_RATE 30.0
+-
+-/**
+ * @brief プラットフォーム依存機能を抽象化する Cubism Platform Abstraction Layer.
+ *
+ * ファイル読み込みや時刻取得等のプラットフォームに依存する関数をまとめる
+@@ -69,17 +63,6 @@ public:
      static void PrintLog(const Csm::csmChar* format, ...);
  
      /**
@@ -2240,7 +2538,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
      * @brief メッセージを出力する
      *
      * メッセージを出力する
-@@ -82,34 +72,6 @@ public:
+@@ -89,41 +72,9 @@ public:
      */
      static void PrintMessage(const Csm::csmChar* message);
  
@@ -2275,8 +2573,15 @@ diff -pruN --exclude build ./demo_clean/src/LAppPal.hpp ./demo_dev/src/LAppPal.h
  private:
      static double s_currentFrame;
      static double s_lastFrame;
+     static double s_deltaTime;
+-#ifdef CSM_FIXED_FRAME_RATE
+-    static int s_frame;
+-#endif
+-
+ };
+ 
 diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSprite.cpp
---- ./demo_clean/src/LAppSprite.cpp	2025-03-23 03:36:38.649078200 +0000
+--- ./demo_clean/src/LAppSprite.cpp	2025-05-29 18:28:26.297597500 +0100
 +++ ./demo_dev/src/LAppSprite.cpp	2023-03-05 23:22:10.900085700 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2284,14 +2589,25 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -6,6 +6,7 @@
+@@ -6,15 +6,16 @@
   */
  
  #include "LAppSprite.hpp"
 +#include "LAppDelegate.hpp"
  
  LAppSprite::LAppSprite(float x, float y, float width, float height, GLuint textureId, GLuint programId)
-     : _rect()
+-    : LAppSprite_Common(textureId),
+-    _rect()
++    : _rect()
+ {
+     _rect.left = (x - width * 0.5f);
+     _rect.right = (x + width * 0.5f);
+     _rect.up = (y + height * 0.5f);
+     _rect.down = (y - height * 0.5f);
++    _textureId = textureId;
+ 
+     // 何番目のattribute変数か
+     _positionLocation = glGetAttribLocation(programId, "position");
 @@ -34,10 +35,13 @@ LAppSprite::~LAppSprite()
  
  void LAppSprite::Render() const
@@ -2308,7 +2624,17 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
      }
  
      const GLfloat uvVertex[] =
-@@ -58,10 +62,10 @@ void LAppSprite::Render() const
+@@ -48,9 +52,6 @@ void LAppSprite::Render() const
+         1.0f, 1.0f,
+     };
+ 
+-    //透過設定
+-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+-
+     // attribute属性を有効にする
+     glEnableVertexAttribArray(_positionLocation);
+     glEnableVertexAttribArray(_uvLocation);
+@@ -61,10 +62,10 @@ void LAppSprite::Render() const
      // 頂点データ
      float positionVertex[] =
      {
@@ -2323,7 +2649,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
      };
  
      // attribute属性を登録
-@@ -70,7 +74,6 @@ void LAppSprite::Render() const
+@@ -73,7 +74,6 @@ void LAppSprite::Render() const
  
      glUniform4f(_colorLocation, _spriteColor[0], _spriteColor[1], _spriteColor[2], _spriteColor[3]);
  
@@ -2331,7 +2657,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
      // モデルの描画
      glBindTexture(GL_TEXTURE_2D, _textureId);
      glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-@@ -78,9 +81,13 @@ void LAppSprite::Render() const
+@@ -81,9 +81,13 @@ void LAppSprite::Render() const
  
  void LAppSprite::RenderImmidiate(GLuint textureId, const GLfloat uvVertex[8]) const
  {
@@ -2347,7 +2673,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
      }
  
      // attribute属性を有効にする
-@@ -93,10 +100,10 @@ void LAppSprite::RenderImmidiate(GLuint
+@@ -96,10 +100,10 @@ void LAppSprite::RenderImmidiate(GLuint
      // 頂点データ
      float positionVertex[] =
      {
@@ -2362,7 +2688,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
      };
  
      // attribute属性を登録
-@@ -112,13 +119,16 @@ void LAppSprite::RenderImmidiate(GLuint
+@@ -115,13 +119,16 @@ void LAppSprite::RenderImmidiate(GLuint
  
  bool LAppSprite::IsHit(float pointX, float pointY) const
  {
@@ -2383,7 +2709,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
  
      return (pointX >= _rect.left && pointX <= _rect.right && y <= _rect.up && y >= _rect.down);
  }
-@@ -138,9 +148,3 @@ void LAppSprite::ResetRect(float x, floa
+@@ -141,9 +148,3 @@ void LAppSprite::ResetRect(float x, floa
      _rect.up = (y + height * 0.5f);
      _rect.down = (y - height * 0.5f);
  }
@@ -2394,7 +2720,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.cpp ./demo_dev/src/LAppSp
 -    _maxHeight = height;
 -}
 diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSprite.hpp
---- ./demo_clean/src/LAppSprite.hpp	2025-03-23 03:36:37.970299000 +0000
+--- ./demo_clean/src/LAppSprite.hpp	2025-05-29 18:28:25.961218800 +0100
 +++ ./demo_dev/src/LAppSprite.hpp	2023-03-05 23:22:10.876156000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2402,7 +2728,51 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSp
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -61,7 +61,7 @@ public:
+@@ -10,18 +10,28 @@
+ #include <GL/glew.h>
+ #include <GLFW/glfw3.h>
+ 
+-#include "LAppSprite_Common.hpp"
+-
+ /**
+ * @brief スプライトを実装するクラス。
+ *
+ * テクスチャID、Rectの管理。
+ *
+ */
+-class LAppSprite : public LAppSprite_Common
++class LAppSprite
+ {
+ public:
+     /**
++    * @brief Rect 構造体。
++    */
++    struct Rect
++    {
++    public:
++        float left;     ///< 左辺
++        float right;    ///< 右辺
++        float up;       ///< 上辺
++        float down;     ///< 下辺
++    };
++
++    /**
+     * @brief コンストラクタ
+     *
+     * @param[in]       x            x座標
+@@ -39,13 +49,19 @@ public:
+     ~LAppSprite();
+ 
+     /**
++    * @brief Getter テクスチャID
++    * @return テクスチャIDを返す
++    */
++    GLuint GetTextureId() { return _textureId; }
++
++    /**
+     * @brief 描画する
+     *
+     */
      void Render() const;
  
      /**
@@ -2411,7 +2781,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSp
      *
      */
      void RenderImmidiate(GLuint textureId, const GLfloat uvVertex[8]) const;
-@@ -94,24 +94,14 @@ public:
+@@ -78,23 +94,14 @@ public:
       */
      void ResetRect(float x, float y, float width, float height);
  
@@ -2424,7 +2794,6 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSp
 -    void SetWindowSize(int width, int height);
 -
  private:
--    GLuint _textureId;      ///< テクスチャID
 -    Rect _rect;             ///< 矩形
 +    GLuint _textureId;   ///< テクスチャID
 +    Rect _rect;          ///< 矩形
@@ -2439,7 +2808,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSprite.hpp ./demo_dev/src/LAppSp
  };
  
 diff -pruN --exclude build ./demo_clean/src/LAppSpriteShader.cpp ./demo_dev/src/LAppSpriteShader.cpp
---- ./demo_clean/src/LAppSpriteShader.cpp	2025-03-23 03:36:37.781727200 +0000
+--- ./demo_clean/src/LAppSpriteShader.cpp	2025-05-29 18:28:25.874065500 +0100
 +++ ./demo_dev/src/LAppSpriteShader.cpp	1970-01-01 00:00:00.000000000 +0000
 @@ -1,108 +0,0 @@
 -﻿/**
@@ -2551,7 +2920,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSpriteShader.cpp ./demo_dev/src/
 -    return shaderId;
 -}
 diff -pruN --exclude build ./demo_clean/src/LAppSpriteShader.hpp ./demo_dev/src/LAppSpriteShader.hpp
---- ./demo_clean/src/LAppSpriteShader.hpp	2025-03-23 03:36:38.009877400 +0000
+--- ./demo_clean/src/LAppSpriteShader.hpp	2025-05-29 18:28:25.983867100 +0100
 +++ ./demo_dev/src/LAppSpriteShader.hpp	1970-01-01 00:00:00.000000000 +0000
 @@ -1,57 +0,0 @@
 -﻿/**
@@ -2612,7 +2981,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppSpriteShader.hpp ./demo_dev/src/
 -    GLuint _programId;                       ///< シェーダID
 -};
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/src/LAppTextureManager.cpp
---- ./demo_clean/src/LAppTextureManager.cpp	2025-03-23 03:36:38.568277100 +0000
+--- ./demo_clean/src/LAppTextureManager.cpp	2025-05-29 18:28:26.250309900 +0100
 +++ ./demo_dev/src/LAppTextureManager.cpp	2023-03-05 23:22:10.765166600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2620,7 +2989,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -10,7 +10,14 @@
+@@ -10,10 +10,17 @@
  #define STBI_NO_STDIO
  #define STBI_ONLY_PNG
  #define STB_IMAGE_IMPLEMENTATION
@@ -2634,8 +3003,35 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
 +#endif
  #include "LAppPal.hpp"
  
- LAppTextureManager::LAppTextureManager()
-@@ -89,11 +96,50 @@ LAppTextureManager::TextureInfo* LAppTex
+-LAppTextureManager::LAppTextureManager() : LAppTextureManager_Common()
++LAppTextureManager::LAppTextureManager()
+ {
+ }
+ 
+@@ -25,11 +32,11 @@ LAppTextureManager::~LAppTextureManager(
+ LAppTextureManager::TextureInfo* LAppTextureManager::CreateTextureFromPngFile(std::string fileName)
+ {
+     //search loaded texture already.
+-    for (Csm::csmUint32 i = 0; i < _texturesInfo.GetSize(); i++)
++    for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
+     {
+-        if (_texturesInfo[i]->fileName == fileName)
++        if (_textures[i]->fileName == fileName)
+         {
+-            return _texturesInfo[i];
++            return _textures[i];
+         }
+     }
+ 
+@@ -82,48 +89,99 @@ LAppTextureManager::TextureInfo* LAppTex
+         textureInfo->height = height;
+         textureInfo->id = textureId;
+ 
+-        _texturesInfo.PushBack(textureInfo);
++        _textures.PushBack(textureInfo);
+     }
+ 
+     return textureInfo;
  
  }
  
@@ -2681,30 +3077,68 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.cpp ./demo_dev/sr
 +
  void LAppTextureManager::ReleaseTextures()
  {
-     for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
+-    for (Csm::csmUint32 i = 0; i < _texturesInfo.GetSize(); i++)
++    for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
      {
--        glDeleteTextures(1, &(_textures[i]->id));
-         delete _textures[i];
+-        glDeleteTextures(1, &(_texturesInfo[i]->id));
++        delete _textures[i];
      }
  
-@@ -108,7 +154,6 @@ void LAppTextureManager::ReleaseTexture(
+-    ReleaseTexturesInfo();
++    _textures.Clear();
+ }
+ 
+ void LAppTextureManager::ReleaseTexture(Csm::csmUint32 textureId)
+ {
+-    for (Csm::csmUint32 i = 0; i < _texturesInfo.GetSize(); i++)
++    for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
+     {
+-        if (_texturesInfo[i]->id != textureId)
++        if (_textures[i]->id != textureId)
          {
              continue;
          }
--        glDeleteTextures(1, &(_textures[i]->id));
-         delete _textures[i];
-         _textures.Remove(i);
+-        glDeleteTextures(1, &(_texturesInfo[i]->id));
+-        delete _texturesInfo[i];
+-        _texturesInfo.Remove(i);
++        delete _textures[i];
++        _textures.Remove(i);
          break;
-@@ -121,7 +166,6 @@ void LAppTextureManager::ReleaseTexture(
+     }
+ }
+ 
+ void LAppTextureManager::ReleaseTexture(std::string fileName)
+ {
+-    for (Csm::csmUint32 i = 0; i < _texturesInfo.GetSize(); i++)
++    for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
      {
-         if (_textures[i]->fileName == fileName)
+-        if (_texturesInfo[i]->fileName == fileName)
++        if (_textures[i]->fileName == fileName)
          {
--            glDeleteTextures(1, &(_textures[i]->id));
-             delete _textures[i];
-             _textures.Remove(i);
+-            glDeleteTextures(1, &(_texturesInfo[i]->id));
+-            delete _texturesInfo[i];
+-            _texturesInfo.Remove(i);
++            delete _textures[i];
++            _textures.Remove(i);
              break;
+         }
+     }
+ }
++
++LAppTextureManager::TextureInfo* LAppTextureManager::GetTextureInfoById(GLuint textureId) const
++{
++    for (Csm::csmUint32 i = 0; i < _textures.GetSize(); i++)
++    {
++        if (_textures[i]->id == textureId)
++        {
++            return _textures[i];
++        }
++    }
++
++    return NULL;
++}
 diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/src/LAppTextureManager.hpp
---- ./demo_clean/src/LAppTextureManager.hpp	2025-03-23 03:36:38.735450300 +0000
+--- ./demo_clean/src/LAppTextureManager.hpp	2025-05-29 18:28:26.344512900 +0100
 +++ ./demo_dev/src/LAppTextureManager.hpp	2023-03-05 23:22:10.822016600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2712,7 +3146,65 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/sr
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -72,6 +72,8 @@ public:
+@@ -12,16 +12,26 @@
+ #include <GLFW/glfw3.h>
+ #include <Type/csmVector.hpp>
+ 
+-#include "LAppTextureManager_Common.hpp"
+-
+ /**
+ * @brief テクスチャ管理クラス
+ *
+ * 画像読み込み、管理を行うクラス。
+ */
+-class LAppTextureManager : public LAppTextureManager_Common
++class LAppTextureManager
+ {
+ public:
++
++    /**
++    * @brief 画像情報構造体
++    */
++    struct TextureInfo
++    {
++        GLuint id;              ///< テクスチャID
++        int width;              ///< 横幅
++        int height;             ///< 高さ
++        std::string fileName;   ///< ファイル名
++    };
++
+     /**
+     * @brief コンストラクタ
+     */
+@@ -33,6 +43,27 @@ public:
+     */
+     ~LAppTextureManager();
+ 
++
++    /**
++    * @brief プリマルチプライ処理
++    *
++    * @param[in] red  画像のRed値
++    * @param[in] green  画像のGreen値
++    * @param[in] blue  画像のBlue値
++    * @param[in] alpha  画像のAlpha値
++    *
++    * @return プリマルチプライ処理後のカラー値
++    */
++    inline unsigned int Premultiply(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha)
++    {
++        return static_cast<unsigned>(\
++            (red * (alpha + 1) >> 8) | \
++            ((green * (alpha + 1) >> 8) << 8) | \
++            ((blue * (alpha + 1) >> 8) << 16) | \
++            (((alpha)) << 24)   \
++            );
++    }
++
+     /**
+     * @brief 画像読み込み
+     *
+@@ -41,6 +72,8 @@ public:
      */
      TextureInfo* CreateTextureFromPngFile(std::string fileName);
  
@@ -2721,21 +3213,24 @@ diff -pruN --exclude build ./demo_clean/src/LAppTextureManager.hpp ./demo_dev/sr
      /**
      * @brief 画像の解放
      *
-@@ -98,9 +100,9 @@ public:
-     /**
-      * @brief テクスチャIDからテクスチャ情報を得る
-      *
--     * @param   textureId[in]       取得したいテクスチャID
--     * @return  テクスチャが存在していればTextureInfoが返る
--     */
+@@ -63,4 +96,15 @@ public:
+     * @param[in] fileName  解放する画像ファイルパス名
+     **/
+     void ReleaseTexture(std::string fileName);
++
++    /**
++     * @brief テクスチャIDからテクスチャ情報を得る
++     *
 +     * @param[in] textureId  取得したいテクスチャID
 +     * @return テクスチャが存在していればTextureInfoが返る
 +     **/
-     TextureInfo* GetTextureInfoById(GLuint textureId) const;
- 
- private:
++    TextureInfo* GetTextureInfoById(GLuint textureId) const;
++
++private:
++    Csm::csmVector<TextureInfo*> _textures;
+ };
 diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView.cpp
---- ./demo_clean/src/LAppView.cpp	2025-03-23 03:36:37.822279000 +0000
+--- ./demo_clean/src/LAppView.cpp	2025-05-29 18:28:25.905329300 +0100
 +++ ./demo_dev/src/LAppView.cpp	2024-03-28 18:26:14.230329000 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -2743,11 +3238,11 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -13,18 +13,18 @@
+@@ -13,19 +13,18 @@
  #include "LAppLive2DManager.hpp"
  #include "LAppTextureManager.hpp"
  #include "LAppDefine.hpp"
--#include "TouchManager.hpp"
+-#include "TouchManager_Common.hpp"
  #include "LAppSprite.hpp"
 -#include "LAppSpriteShader.hpp"
  #include "LAppModel.hpp"
@@ -2759,6 +3254,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  using namespace LAppDefine;
  
  LAppView::LAppView():
+-    LAppView_Common(),
 +    _programId(0),
      _back(NULL),
 -    _gear(NULL),
@@ -2766,50 +3262,102 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
      _renderSprite(NULL),
      _renderTarget(SelectTarget_None)
  {
-@@ -33,9 +33,6 @@ LAppView::LAppView():
+@@ -34,61 +33,72 @@ LAppView::LAppView():
      _clearColor[2] = 1.0f;
      _clearColor[3] = 0.0f;
  
 -    // タッチ関係のイベント管理
--    _touchManager = new TouchManager();
--
-     // デバイス座標からスクリーン座標に変換するための
-     _deviceToScreen = new CubismMatrix44();
+-    _touchManager = new TouchManager_Common();
++    // デバイス座標からスクリーン座標に変換するための
++    _deviceToScreen = new CubismMatrix44();
++
++    // 画面の表示の拡大縮小や移動の変換を行う行列
++    _viewMatrix = new CubismViewMatrix();
+ }
  
-@@ -46,14 +43,11 @@ LAppView::LAppView():
  LAppView::~LAppView()
  {
      _renderBuffer.DestroyOffscreenSurface();
--    delete _spriteShader;
-     delete _renderSprite;
+-    if (_renderSprite)
+-    {
+-        delete _renderSprite;
+-    }
+-    if (_spriteShader)
+-    {
+-        delete _spriteShader;
+-    }
+-    if (_touchManager)
+-    {
+-        delete _touchManager;
+-    }
+-    if (_back)
+-    {
+-        delete _back;
+-    }
+-    if (_gear)
+-    {
+-        delete _gear;
+-    }
+-    if (_power)
+-    {
+-        delete _power;
+-    }
++    delete _renderSprite;
 +
-     delete _viewMatrix;
-     delete _deviceToScreen;
--    delete _touchManager;
-     delete _back;
--    delete _gear;
--    delete _power;
++    delete _viewMatrix;
++    delete _deviceToScreen;
++    delete _back;
  }
  
- void LAppView::Initialize()
-@@ -76,7 +70,7 @@ void LAppView::Initialize()
-     _viewMatrix->SetScreenRect(left, right, bottom, top); // デバイスに対応する画面の範囲。 Xの左端, Xの右端, Yの下端, Yの上端
-     _viewMatrix->Scale(ViewScale, ViewScale);
+-void LAppView::Initialize(int width, int height)
++void LAppView::Initialize()
+ {
+-    LAppView_Common::Initialize(width, height);
++    int width, height;
++    glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &width, &height);
  
--    _deviceToScreen->LoadIdentity(); // サイズが変わった際などリセット必須
-+    _deviceToScreen->LoadIdentity();
-     if (width > height)
-     {
-         float screenW = fabsf(right - left);
-@@ -100,25 +94,11 @@ void LAppView::Initialize()
-         ViewLogicalMaxBottom,
-         ViewLogicalMaxTop
-     );
--
 -    // シェーダー作成
 -    _spriteShader = new LAppSpriteShader();
--
++    if(width==0 || height==0)
++    {
++        return;
++    }
+ 
 -    InitializeSprite();
++    // 縦サイズを基準とする
++    float ratio = static_cast<float>(width) / static_cast<float>(height);
++    float left = -ratio;
++    float right = ratio;
++    float bottom = ViewLogicalLeft;
++    float top = ViewLogicalRight;
++
++    _viewMatrix->SetScreenRect(left, right, bottom, top); // デバイスに対応する画面の範囲。 Xの左端, Xの右端, Yの下端, Yの上端
++    _viewMatrix->Scale(ViewScale, ViewScale);
++
++    _deviceToScreen->LoadIdentity();
++    if (width > height)
++    {
++        float screenW = fabsf(right - left);
++        _deviceToScreen->ScaleRelative(screenW / width, -screenW / width);
++    }
++    else
++    {
++        float screenH = fabsf(top - bottom);
++        _deviceToScreen->ScaleRelative(screenH / height, -screenH / height);
++    }
++    _deviceToScreen->TranslateRelative(-width * 0.5f, -height * 0.5f);
++
++    // 表示範囲の設定
++    _viewMatrix->SetMaxScale(ViewMaxScale); // 限界拡大率
++    _viewMatrix->SetMinScale(ViewMinScale); // 限界縮小率
++
++    // 表示できる最大範囲
++    _viewMatrix->SetMaxScreenRect(
++        ViewLogicalMaxLeft,
++        ViewLogicalMaxRight,
++        ViewLogicalMaxBottom,
++        ViewLogicalMaxTop
++    );
  }
  
  void LAppView::Render()
@@ -2827,7 +3375,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  
      LAppLive2DManager* Live2DManager = LAppLive2DManager::GetInstance();
  
-@@ -138,16 +118,15 @@ void LAppView::Render()
+@@ -108,16 +118,15 @@ void LAppView::Render()
              1.0f, 0.0f,
          };
  
@@ -2836,8 +3384,9 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
          {
 -            LAppModel* model = Live2DManager->GetModel(i);
 -            float alpha = i < 1 ? 1.0f : model->GetOpacity(); // 片方のみ不透明度を取得できるようにする
+-            _renderSprite->SetColor(1.0f * alpha, 1.0f * alpha, 1.0f * alpha, alpha);
 +            float alpha = GetSpriteAlpha(i); // サンプルとしてαに適当な差をつける
-             _renderSprite->SetColor(1.0f, 1.0f, 1.0f, alpha);
++            _renderSprite->SetColor(1.0f, 1.0f, 1.0f, alpha);
  
 +            LAppModel *model = Live2DManager->GetModel(i);
              if (model)
@@ -2848,7 +3397,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
              }
          }
      }
-@@ -155,91 +134,28 @@ void LAppView::Render()
+@@ -125,94 +134,53 @@ void LAppView::Render()
  
  void LAppView::InitializeSprite()
  {
@@ -2898,15 +3447,21 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
      x = width * 0.5f;
      y = height * 0.5f;
 -    _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, programId);
--}
--
++    _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, _programId);
++
+ }
+ 
 -void LAppView::OnTouchesBegan(float px, float py) const
--{
++float LAppView::TransformViewX(float deviceX) const
+ {
 -    _touchManager->TouchesBegan(px, py);
--}
--
++    float screenX = _deviceToScreen->TransformX(deviceX); // 論理座標変換した座標を取得。
++    return _viewMatrix->InvertTransformX(screenX); // 拡大、縮小、移動後の値。
+ }
+ 
 -void LAppView::OnTouchesMoved(float px, float py) const
--{
++float LAppView::TransformViewY(float deviceY) const
+ {
 -    float viewX = this->TransformViewX(_touchManager->GetX());
 -    float viewY = this->TransformViewY(_touchManager->GetY());
 -
@@ -2914,10 +3469,13 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -
 -    LAppLive2DManager* Live2DManager = LAppLive2DManager::GetInstance();
 -    Live2DManager->OnDrag(viewX, viewY);
--}
--
++    float screenY = _deviceToScreen->TransformY(deviceY); // 論理座標変換した座標を取得。
++    return _viewMatrix->InvertTransformY(screenY); // 拡大、縮小、移動後の値。
+ }
+ 
 -void LAppView::OnTouchesEnded(float px, float py) const
--{
++float LAppView::TransformScreenX(float deviceX) const
+ {
 -    // タッチ終了
 -    LAppLive2DManager* live2DManager = LAppLive2DManager::GetInstance();
 -    live2DManager->OnDrag(0.0f, 0.0f);
@@ -2931,25 +3489,24 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -            LAppPal::PrintLogLn("[APP]touchesEnded x:%.2f y:%.2f", x, y);
 -        }
 -        live2DManager->OnTap(x, y);
-+    _renderSprite = new LAppSprite(x, y, static_cast<float>(width), static_cast<float>(height), 0, _programId);
- 
+-
 -        // 歯車にタップしたか
 -        if (_gear->IsHit(px, py))
 -        {
 -            live2DManager->NextScene();
 -        }
--
++    return _deviceToScreen->TransformX(deviceX);
++}
+ 
 -        // 電源ボタンにタップしたか
 -        if (_power->IsHit(px, py))
 -        {
 -            LAppDelegate::GetInstance()->AppEnd();
 -        }
 -    }
- }
- 
- float LAppView::TransformViewX(float deviceX) const
-@@ -264,7 +180,7 @@ float LAppView::TransformScreenY(float d
-     return _deviceToScreen->TransformY(deviceY);
++float LAppView::TransformScreenY(float deviceY) const
++{
++    return _deviceToScreen->TransformY(deviceY);
  }
  
 -void LAppView::PreModelDraw(LAppModel& refModel)
@@ -2957,7 +3514,15 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  {
      // 別のレンダリングターゲットへ向けて描画する場合の使用するフレームバッファ
      Csm::Rendering::CubismOffscreenSurface_OpenGLES2* useTarget = NULL;
-@@ -277,12 +193,13 @@ void LAppView::PreModelDraw(LAppModel& r
+@@ -220,20 +188,18 @@ void LAppView::PreModelDraw(LAppModel& r
+     if (_renderTarget != SelectTarget_None)
+     {// 別のレンダリングターゲットへ向けて描画する場合
+ 
+-        //透過設定
+-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+-
+         // 使用するターゲット
+         useTarget = (_renderTarget == SelectTarget_ViewFrameBuffer) ? &_renderBuffer : &refModel.GetRenderBuffer();
  
          if (!useTarget->IsValid())
          {// 描画ターゲット内部未作成の場合はここで作成
@@ -2975,7 +3540,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
              }
          }
  
-@@ -292,7 +209,7 @@ void LAppView::PreModelDraw(LAppModel& r
+@@ -243,7 +209,7 @@ void LAppView::PreModelDraw(LAppModel& r
      }
  }
  
@@ -2984,20 +3549,31 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
  {
      // 別のレンダリングターゲットへ向けて描画する場合の使用するフレームバッファ
      Csm::Rendering::CubismOffscreenSurface_OpenGLES2* useTarget = NULL;
-@@ -318,12 +235,6 @@ void LAppView::PostModelDraw(LAppModel&
+@@ -268,13 +234,7 @@ void LAppView::PostModelDraw(LAppModel&
+                 1.0f, 0.0f,
              };
  
-             _renderSprite->SetColor(1.0f, 1.0f, 1.0f, GetSpriteAlpha(0));
+-            _renderSprite->SetColor(1.0f * GetSpriteAlpha(0), 1.0f * GetSpriteAlpha(0), 1.0f * GetSpriteAlpha(0), GetSpriteAlpha(0));
 -
 -            // 画面サイズを取得する
 -            int maxWidth, maxHeight;
 -            glfwGetWindowSize(LAppDelegate::GetInstance()->GetWindow(), &maxWidth, &maxHeight);
 -            _renderSprite->SetWindowSize(maxWidth, maxHeight);
 -
++            _renderSprite->SetColor(1.0f, 1.0f, 1.0f, GetSpriteAlpha(0));
              _renderSprite->RenderImmidiate(useTarget->GetColorBuffer(), uvVertex);
          }
      }
-@@ -388,32 +299,4 @@ void LAppView::ResizeSprite()
+@@ -296,7 +256,7 @@ void LAppView::SetRenderTargetClearColor
+ float LAppView::GetSpriteAlpha(int assign) const
+ {
+     // assignの数値に応じて適当に決定
+-    float alpha = 0.4f + static_cast<float>(assign) * 0.5f; // サンプルとしてαに適当な差をつける
++    float alpha = 0.25f + static_cast<float>(assign) * 0.5f; // サンプルとしてαに適当な差をつける
+     if (alpha > 1.0f)
+     {
+         alpha = 1.0f;
+@@ -339,32 +299,4 @@ void LAppView::ResizeSprite()
              _back->ResetRect(x, y, fWidth, fHeight);
          }
      }
@@ -3031,7 +3607,7 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.cpp ./demo_dev/src/LAppView
 -    }
  }
 diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView.hpp
---- ./demo_clean/src/LAppView.hpp	2025-03-23 03:36:37.693545200 +0000
+--- ./demo_clean/src/LAppView.hpp	2025-05-29 18:28:25.826786600 +0100
 +++ ./demo_dev/src/LAppView.hpp	2024-03-28 18:25:01.124283600 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -3039,18 +3615,35 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -14,10 +14,8 @@
+@@ -14,17 +14,13 @@
  #include "CubismFramework.hpp"
  #include <Rendering/OpenGL/CubismOffscreenSurface_OpenGLES2.hpp>
  
--class TouchManager;
+-#include "LAppView_Common.hpp"
+-
+-class TouchManager_Common;
  class LAppSprite;
  class LAppModel;
 -class LAppSpriteShader;
  
  /**
  * @brief 描画クラス
-@@ -62,35 +60,11 @@ public:
+ */
+-class LAppView : public LAppView_Common
++class LAppView
+ {
+ public:
+ 
+@@ -51,7 +47,7 @@ public:
+     /**
+     * @brief 初期化する。
+     */
+-    virtual void Initialize(int width, int height) override;
++    void Initialize();
+ 
+     /**
+     * @brief 描画する。
+@@ -64,43 +60,47 @@ public:
      void InitializeSprite();
  
      /**
@@ -3062,33 +3655,44 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
  
      /**
 -    * @brief タッチされたときに呼ばれる。
--    *
--    * @param[in]       pointX            スクリーンX座標
--    * @param[in]       pointY            スクリーンY座標
--    */
--    void OnTouchesBegan(float pointX, float pointY) const;
--
--    /**
--    * @brief タッチしているときにポインタが動いたら呼ばれる。
--    *
--    * @param[in]       pointX            スクリーンX座標
--    * @param[in]       pointY            スクリーンY座標
--    */
--    void OnTouchesMoved(float pointX, float pointY) const;
--
--    /**
--    * @brief タッチが終了したら呼ばれる。
--    *
--    * @param[in]       pointX            スクリーンX座標
--    * @param[in]       pointY            スクリーンY座標
--    */
--    void OnTouchesEnded(float pointX, float pointY) const;
--
--    /**
-     * @brief X座標をView座標に変換する。
++    * @brief X座標をView座標に変換する。
      *
-     * @param[in]       deviceX            デバイスX座標
-@@ -121,12 +95,12 @@ public:
+-    * @param[in]       pointX            スクリーンX座標
+-    * @param[in]       pointY            スクリーンY座標
++    * @param[in]       deviceX            デバイスX座標
+     */
+-    void OnTouchesBegan(float pointX, float pointY) const;
++    float TransformViewX(float deviceX) const;
+ 
+     /**
+-    * @brief タッチしているときにポインタが動いたら呼ばれる。
++    * @brief Y座標をView座標に変換する。
+     *
+-    * @param[in]       pointX            スクリーンX座標
+-    * @param[in]       pointY            スクリーンY座標
++    * @param[in]       deviceY            デバイスY座標
+     */
+-    void OnTouchesMoved(float pointX, float pointY) const;
++    float TransformViewY(float deviceY) const;
+ 
+     /**
+-    * @brief タッチが終了したら呼ばれる。
++    * @brief X座標をScreen座標に変換する。
+     *
+-    * @param[in]       pointX            スクリーンX座標
+-    * @param[in]       pointY            スクリーンY座標
++    * @param[in]       deviceX            デバイスX座標
+     */
+-    void OnTouchesEnded(float pointX, float pointY) const;
++    float TransformScreenX(float deviceX) const;
++
++    /**
++    * @brief Y座標をScreen座標に変換する。
++    *
++    * @param[in]       deviceY            デバイスY座標
++    */
++    float TransformScreenY(float deviceY) const;
+ 
      /**
       * @brief   モデル1体を描画する直前にコールされる
       */
@@ -3103,13 +3707,13 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
  
      /**
       * @brief   別レンダリングターゲットにモデルを描画するサンプルで
-@@ -148,18 +122,14 @@ public:
+@@ -122,16 +122,14 @@ public:
      void SetRenderTargetClearColor(float r, float g, float b);
  
  private:
--    TouchManager* _touchManager;                 ///< タッチマネージャー
-     Csm::CubismMatrix44* _deviceToScreen;    ///< デバイスからスクリーンへの行列
-     Csm::CubismViewMatrix* _viewMatrix;      ///< viewMatrix
+-    TouchManager_Common* _touchManager;                 ///< タッチマネージャー
++    Csm::CubismMatrix44* _deviceToScreen;    ///< デバイスからスクリーンへの行列
++    Csm::CubismViewMatrix* _viewMatrix;      ///< viewMatrix
 +    GLuint _programId;                       ///< シェーダID
      LAppSprite* _back;                       ///< 背景画像
 -    LAppSprite* _gear;                       ///< ギア画像
@@ -3125,286 +3729,320 @@ diff -pruN --exclude build ./demo_clean/src/LAppView.hpp ./demo_dev/src/LAppView
 -    LAppSpriteShader* _spriteShader;   ///< シェーダー作成委譲クラス
  };
 diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.cpp ./demo_dev/src/LAppWavFileHandler.cpp
---- ./demo_clean/src/LAppWavFileHandler.cpp	2025-03-23 03:36:39.011226300 +0000
+--- ./demo_clean/src/LAppWavFileHandler.cpp	1970-01-01 00:00:00.000000000 +0000
 +++ ./demo_dev/src/LAppWavFileHandler.cpp	2023-03-05 23:22:10.921862800 +0000
-@@ -11,8 +11,7 @@
- #include "LAppPal.hpp"
- 
- LAppWavFileHandler::LAppWavFileHandler()
--    : _rawData(NULL)
--    , _pcmData(NULL)
+@@ -0,0 +1,233 @@
++﻿/**
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#include "LAppWavFileHandler.hpp"
++#include <cmath>
++#include <cstdint>
++#include "LAppPal.hpp"
++
++LAppWavFileHandler::LAppWavFileHandler()
 +    : _pcmData(NULL)
-     , _userTimeSeconds(0.0f)
-     , _lastRms(0.0f)
-     , _sampleOffset(0)
-@@ -21,11 +20,6 @@ LAppWavFileHandler::LAppWavFileHandler()
- 
- LAppWavFileHandler::~LAppWavFileHandler()
- {
--    if (_rawData != NULL)
--    {
--        CSM_FREE(_rawData);
--    }
--
-     if (_pcmData != NULL)
-     {
-         ReleasePcmData();
-@@ -91,115 +85,11 @@ Csm::csmFloat32 LAppWavFileHandler::GetR
-     return _lastRms;
- }
- 
--const LAppWavFileHandler::WavFileInfo& LAppWavFileHandler::GetWavFileInfo() const
--{
--    return _wavFileInfo;
--}
--
--const Csm::csmByte* LAppWavFileHandler::GetRawData() const
--{
--    return _rawData;
--}
--
--Csm::csmUint64 LAppWavFileHandler::GetRawDataSize() const
--{
--    return _rawDataSize;
--}
--
--Csm::csmVector<Csm::csmFloat32> LAppWavFileHandler::GetPcmData() const
--{
--    Csm::csmVector<Csm::csmFloat32> buffer;
--
--    for (Csm::csmUint32 sampleCount = 0; sampleCount < _wavFileInfo._samplesPerChannel; sampleCount++)
--    {
--        for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
--        {
--            buffer.PushBack(_pcmData[channelCount][sampleCount]);
--        }
--    }
--
--    return buffer;
--}
--
--void LAppWavFileHandler::GetPcmDataChannel(Csm::csmFloat32* dst, Csm::csmUint32 useChannel) const
--{
--    for (Csm::csmUint32 sampleCount = 0; sampleCount < _wavFileInfo._samplesPerChannel; sampleCount++)
--    {
--        dst[sampleCount] = _pcmData[useChannel][sampleCount];
--    }
--}
--
--Csm::csmFloat32 LAppWavFileHandler::NormalizePcmSample(Csm::csmUint32 bitsPerSample, Csm::csmByte* data, Csm::csmUint32 dataSize)
--{
--    Csm::csmInt32 pcm32;
--
--    // 32ビット幅に拡張してから-1～1の範囲に丸める
--    switch (bitsPerSample)
--    {
--    case 8:
--        if (1 <= dataSize)
--        {
--            const Csm::csmUint8 ret = data[0];
--            pcm32 = static_cast<Csm::csmInt32>(ret) - 128;
--            pcm32 <<= 24;
--        }
--        else
--        {
--            pcm32 = 0;
--        }
--        break;
--    case 16:
--        if (2 <= dataSize)
--        {
--            const Csm::csmUint16 ret = (data[1] << 8) | data[0];
--            pcm32 = ret << 16;
--        }
--        else
--        {
--            pcm32 = 0;
--        }
--        break;
--    case 24:
--        if (3 <= dataSize)
--        {
--            const Csm::csmUint32 ret = (data[2] << 16) | (data[1] << 8) | data[0];
--            pcm32 = ret << 8;
--        }
--        else
--        {
--            pcm32 = 0;
--        }
--        break;
--    case 32:
--        if (4 <= dataSize)
--        {
--            const Csm::csmUint32 ret = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
--            pcm32 = ret << 0;
--        }
--        else
--        {
--            pcm32 = 0;
--        }
--        break;
--    default:
--        // 対応していないビット幅
--        pcm32 = 0;
--        break;
--    }
--
--    return static_cast<Csm::csmFloat32>(pcm32) / INT32_MAX;
--}
--
- Csm::csmBool LAppWavFileHandler::LoadWavFile(const Csm::csmString& filePath)
- {
-     Csm::csmBool ret;
- 
-     // 既にwavファイルロード済みならば領域開放
--    if (_rawData != NULL)
--    {
--        CSM_FREE(_rawData);
--        _rawDataSize = 0;
--    }
-     if (_pcmData != NULL)
-     {
-         ReleasePcmData();
-@@ -251,10 +141,10 @@ Csm::csmBool LAppWavFileHandler::LoadWav
-         _wavFileInfo._numberOfChannels = _byteReader.Get16LittleEndian();
-         // サンプリングレート
-         _wavFileInfo._samplingRate = _byteReader.Get32LittleEndian();
--        // 平均データ速度
--        _wavFileInfo._avgBytesPerSec = _byteReader.Get32LittleEndian();
--        // ブロックサイズ
--        _wavFileInfo._blockAlign = _byteReader.Get16LittleEndian();
++    , _userTimeSeconds(0.0f)
++    , _lastRms(0.0f)
++    , _sampleOffset(0)
++{
++}
++
++LAppWavFileHandler::~LAppWavFileHandler()
++{
++    if (_pcmData != NULL)
++    {
++        ReleasePcmData();
++    }
++}
++
++Csm::csmBool LAppWavFileHandler::Update(Csm::csmFloat32 deltaTimeSeconds)
++{
++    Csm::csmUint32 goalOffset;
++    Csm::csmFloat32 rms;
++
++    // データロード前/ファイル末尾に達した場合は更新しない
++    if ((_pcmData == NULL)
++        || (_sampleOffset >= _wavFileInfo._samplesPerChannel))
++    {
++        _lastRms = 0.0f;
++        return false;
++    }
++
++    // 経過時間後の状態を保持
++    _userTimeSeconds += deltaTimeSeconds;
++    goalOffset = static_cast<Csm::csmUint32>(_userTimeSeconds * _wavFileInfo._samplingRate);
++    if (goalOffset > _wavFileInfo._samplesPerChannel)
++    {
++        goalOffset = _wavFileInfo._samplesPerChannel;
++    }
++
++    // RMS計測
++    rms = 0.0f;
++    for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
++    {
++        for (Csm::csmUint32 sampleCount = _sampleOffset; sampleCount < goalOffset; sampleCount++)
++        {
++            Csm::csmFloat32 pcm = _pcmData[channelCount][sampleCount];
++            rms += pcm * pcm;
++        }
++    }
++    rms = sqrt(rms / (_wavFileInfo._numberOfChannels * (goalOffset - _sampleOffset)));
++
++    _lastRms = rms;
++    _sampleOffset = goalOffset;
++    return true;
++}
++
++void LAppWavFileHandler::Start(const Csm::csmString& filePath)
++{
++    // WAVファイルのロード
++    if (!LoadWavFile(filePath))
++    {
++        return;
++    }
++
++    // サンプル参照位置を初期化
++    _sampleOffset = 0;
++    _userTimeSeconds = 0.0f;
++
++    // RMS値をリセット
++    _lastRms = 0.0f;
++}
++
++Csm::csmFloat32 LAppWavFileHandler::GetRms() const
++{
++    return _lastRms;
++}
++
++Csm::csmBool LAppWavFileHandler::LoadWavFile(const Csm::csmString& filePath)
++{
++    Csm::csmBool ret;
++
++    // 既にwavファイルロード済みならば領域開放
++    if (_pcmData != NULL)
++    {
++        ReleasePcmData();
++    }
++
++    // ファイルロード
++    _byteReader._fileByte = LAppPal::LoadFileAsBytes(filePath.GetRawString(), &(_byteReader._fileSize));
++    _byteReader._readOffset = 0;
++
++    // ファイルロードに失敗しているか、先頭のシグネチャ"RIFF"を入れるサイズもない場合は失敗
++    if ((_byteReader._fileByte == NULL) || (_byteReader._fileSize < 4))
++    {
++        return false;
++    }
++
++    // ファイル名
++    _wavFileInfo._fileName = filePath;
++
++    do {
++        // シグネチャ "RIFF"
++        if (!_byteReader.GetCheckSignature("RIFF"))
++        {
++            ret = false;
++            break;
++        }
++        // ファイルサイズ-8（読み飛ばし）
++        _byteReader.Get32LittleEndian();
++        // シグネチャ "WAVE"
++        if (!_byteReader.GetCheckSignature("WAVE"))
++        {
++            ret = false;
++            break;
++        }
++        // シグネチャ "fmt "
++        if (!_byteReader.GetCheckSignature("fmt "))
++        {
++            ret = false;
++            break;
++        }
++        // fmtチャンクサイズ
++        const Csm::csmUint32 fmtChunkSize = _byteReader.Get32LittleEndian();
++        // フォーマットIDは1（リニアPCM）以外受け付けない
++        if (_byteReader.Get16LittleEndian() != 1)
++        {
++            ret = false;
++            break;
++        }
++        // チャンネル数
++        _wavFileInfo._numberOfChannels = _byteReader.Get16LittleEndian();
++        // サンプリングレート
++        _wavFileInfo._samplingRate = _byteReader.Get32LittleEndian();
 +        // データ速度[byte/sec]（読み飛ばし）
 +        _byteReader.Get32LittleEndian();
 +        // ブロックサイズ（読み飛ばし）
 +        _byteReader.Get16LittleEndian();
-         // 量子化ビット数
-         _wavFileInfo._bitsPerSample = _byteReader.Get16LittleEndian();
-         // fmtチャンクの拡張部分の読み飛ばし
-@@ -280,25 +170,16 @@ Csm::csmBool LAppWavFileHandler::LoadWav
-             _wavFileInfo._samplesPerChannel = (dataChunkSize * 8) / (_wavFileInfo._bitsPerSample * _wavFileInfo._numberOfChannels);
-         }
-         // 領域確保
--        _rawDataSize = static_cast<Csm::csmUint64>(_wavFileInfo._blockAlign) * static_cast<Csm::csmUint64>(_wavFileInfo._samplesPerChannel);
--        _rawData = static_cast<Csm::csmByte*>(CSM_MALLOC(sizeof(Csm::csmByte) * _rawDataSize));
-         _pcmData = static_cast<Csm::csmFloat32**>(CSM_MALLOC(sizeof(Csm::csmFloat32*) * _wavFileInfo._numberOfChannels));
-         for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
-         {
-             _pcmData[channelCount] = static_cast<Csm::csmFloat32*>(CSM_MALLOC(sizeof(Csm::csmFloat32) * _wavFileInfo._samplesPerChannel));
-         }
-         // 波形データ取得
--        Csm::csmUint64 rawPos = 0;
-         for (Csm::csmUint32 sampleCount = 0; sampleCount < _wavFileInfo._samplesPerChannel; sampleCount++)
-         {
-             for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
-             {
--                // 正規化前
--                for (Csm::csmUint32 byteCount = 0; byteCount < _wavFileInfo._bitsPerSample / 8; byteCount++)
--                {
--                    _rawData[rawPos++] = _byteReader._fileByte[_byteReader._readOffset + byteCount];
--                }
--                // 正規化後
-                 _pcmData[channelCount][sampleCount] = GetPcmSample();
-             }
-         }
++        // 量子化ビット数
++        _wavFileInfo._bitsPerSample = _byteReader.Get16LittleEndian();
++        // fmtチャンクの拡張部分の読み飛ばし
++        if (fmtChunkSize > 16)
++        {
++            _byteReader._readOffset += (fmtChunkSize - 16);
++        }
++        // "data"チャンクが出現するまで読み飛ばし
++        while (!(_byteReader.GetCheckSignature("data"))
++            && (_byteReader._readOffset < _byteReader._fileSize))
++        {
++            _byteReader._readOffset += _byteReader.Get32LittleEndian();
++        }
++        // ファイル内に"data"チャンクが出現しなかった
++        if (_byteReader._readOffset >= _byteReader._fileSize)
++        {
++            ret = false;
++            break;
++        }
++        // サンプル数
++        {
++            const Csm::csmUint32 dataChunkSize = _byteReader.Get32LittleEndian();
++            _wavFileInfo._samplesPerChannel = (dataChunkSize * 8) / (_wavFileInfo._bitsPerSample * _wavFileInfo._numberOfChannels);
++        }
++        // 領域確保
++        _pcmData = static_cast<Csm::csmFloat32**>(CSM_MALLOC(sizeof(Csm::csmFloat32*) * _wavFileInfo._numberOfChannels));
++        for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
++        {
++            _pcmData[channelCount] = static_cast<Csm::csmFloat32*>(CSM_MALLOC(sizeof(Csm::csmFloat32) * _wavFileInfo._samplesPerChannel));
++        }
++        // 波形データ取得
++        for (Csm::csmUint32 sampleCount = 0; sampleCount < _wavFileInfo._samplesPerChannel; sampleCount++)
++        {
++            for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
++            {
++                _pcmData[channelCount][sampleCount] = GetPcmSample();
++            }
++        }
++
++        ret = true;
++
++    }  while (false);
++
++    // ファイル開放
++    LAppPal::ReleaseBytes(_byteReader._fileByte);
++    _byteReader._fileByte = NULL;
++    _byteReader._fileSize = 0;
++
++    return ret;
++}
++
++Csm::csmFloat32 LAppWavFileHandler::GetPcmSample()
++{
++    Csm::csmInt32 pcm32;
++
++    // 32ビット幅に拡張してから-1～1の範囲に丸める
++    switch (_wavFileInfo._bitsPerSample)
++    {
++    case 8:
++        pcm32 = static_cast<Csm::csmInt32>(_byteReader.Get8()) - 128;
++        pcm32 <<= 24;
++        break;
++    case 16:
++        pcm32 = _byteReader.Get16LittleEndian() << 16;
++        break;
++    case 24:
++        pcm32 = _byteReader.Get24LittleEndian() << 8;
++        break;
++    default:
++        // 対応していないビット幅
++        pcm32 = 0;
++        break;
++    }
++
++    return static_cast<Csm::csmFloat32>(pcm32) / INT32_MAX;
++}
++
++void LAppWavFileHandler::ReleasePcmData()
++{
++    for (Csm::csmUint32 channelCount = 0; channelCount < _wavFileInfo._numberOfChannels; channelCount++)
++    {
++        CSM_FREE(_pcmData[channelCount]);
++    }
++    CSM_FREE(_pcmData);
++    _pcmData = NULL;
++}
 diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.hpp ./demo_dev/src/LAppWavFileHandler.hpp
---- ./demo_clean/src/LAppWavFileHandler.hpp	2025-03-23 03:36:38.433030700 +0000
+--- ./demo_clean/src/LAppWavFileHandler.hpp	1970-01-01 00:00:00.000000000 +0000
 +++ ./demo_dev/src/LAppWavFileHandler.hpp	2023-03-05 23:22:10.871136700 +0000
-@@ -8,7 +8,7 @@
- #pragma once
- 
- #include <CubismFramework.hpp>
--#include <Type/csmVector.hpp>
+@@ -0,0 +1,182 @@
++﻿/**
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#pragma once
++
++#include <CubismFramework.hpp>
 +#include <Utils/CubismString.hpp>
- 
-  /**
-   * @brief wavファイルハンドラ
-@@ -18,28 +18,6 @@ class LAppWavFileHandler
- {
- public:
-     /**
--     * @brief 読み込んだwavfileの情報
--     */
--    struct WavFileInfo
--    {
--        /**
--         * @brief コンストラクタ
--         */
--        WavFileInfo() : _fileName(""), _numberOfChannels(0),
--            _bitsPerSample(0), _samplingRate(0), _samplesPerChannel(0),
--            _avgBytesPerSec(0), _blockAlign(0)
--        { }
--
--        Csm::csmString _fileName; ///< ファイル名
--        Csm::csmUint32 _numberOfChannels; ///< チャンネル数
--        Csm::csmUint32 _bitsPerSample; ///< サンプルあたりビット数
--        Csm::csmUint32 _samplingRate; ///< サンプリングレート
--        Csm::csmUint32 _samplesPerChannel; ///< 1チャンネルあたり総サンプル数
--        Csm::csmUint32 _avgBytesPerSec; ///< 平均データ速度
--        Csm::csmUint32 _blockAlign; ///< ブロックサイズ
--    } _wavFileInfo;
--
--    /**
-      * @brief コンストラクタ
-      */
-     LAppWavFileHandler();
-@@ -72,53 +50,6 @@ public:
-      */
-     Csm::csmFloat32 GetRms() const;
- 
--    /**
--     * @brief ファイル情報を取得
--     *
--     * @retval  ファイル情報
--     */
--    const WavFileInfo& GetWavFileInfo() const;
--
--    /**
--     * @brief 正規化前のデータを取得
--     *
--     * @retval  正規化前のデータ
--     */
--    const Csm::csmByte* GetRawData() const;
--
--    /**
--     * @brief 正規化前のデータの大きさを取得
--     *
--     * @retval  正規化前のデータの大きさ
--     */
--    Csm::csmUint64 GetRawDataSize() const;
--
--    /**
--     * @brief 正規化データを取得する
--     *
--     * @retval 正規化データ
--     */
--    Csm::csmVector<Csm::csmFloat32> GetPcmData() const;
--
--    /**
--     * @brief 引数で指定したチャンネルの正規化データを取得する
--     *
--     * @param[in] dst 格納先
--     * @param[in] useChannel 使用するチャンネル
--     */
--    void GetPcmDataChannel(Csm::csmFloat32* dst, Csm::csmUint32 useChannel) const;
--
--    /**
--     * @brief -1～1の範囲の1サンプル取得
--     *
--     * @param[in] bitsPerSample ビット深度
--     * @param[in] data 正規化したいデータ
--     * @param[in] dataSize 正規化したいデータの大きさ
--     *
--     * @retval    csmFloat32    正規化されたサンプル
--     */
--    static Csm::csmFloat32 NormalizePcmSample(Csm::csmUint32 bitsPerSample, Csm::csmByte* data, Csm::csmUint32 dataSize);
--
- private:
-     /**
-      * @brief wavファイルのロード
-@@ -141,6 +72,25 @@ private:
-     Csm::csmFloat32 GetPcmSample();
- 
-     /**
++
++ /**
++  * @brief wavファイルハンドラ
++  * @attention 16bit wav ファイル読み込みのみ実装済み
++  */
++class LAppWavFileHandler
++{
++public:
++    /**
++     * @brief コンストラクタ
++     */
++    LAppWavFileHandler();
++
++    /**
++     * @brief デストラクタ
++     */
++    ~LAppWavFileHandler();
++
++    /**
++     * @brief wavファイルハンドラの内部状態更新
++     *
++     * @param[in]   deltaTimeSeconds    デルタ時間[秒]
++     * @retval  true    更新されている
++     * @retval  false   更新されていない
++     */
++    Csm::csmBool Update(Csm::csmFloat32 deltaTimeSeconds);
++
++    /**
++     * @brief 引数で指定したwavファイルの読み込みを開始する
++     *
++     * @param[in] filePath wavファイルのパス
++     */
++    void Start(const Csm::csmString& filePath);
++
++    /**
++     * @brief 現在のRMS値取得
++     *
++     * @retval  csmFloat32 RMS値
++     */
++    Csm::csmFloat32 GetRms() const;
++
++private:
++    /**
++     * @brief wavファイルのロード
++     *
++     * @param[in] filePath wavファイルのパス
++     * @retval  true    読み込み成功
++     * @retval  false   読み込み失敗
++     */
++    Csm::csmBool LoadWavFile(const Csm::csmString& filePath);
++
++    /**
++     * @brief PCMデータの解放
++     */
++    void ReleasePcmData();
++
++    /**
++     * @brief -1～1の範囲の1サンプル取得
++     * @retval    csmFloat32    正規化されたサンプル
++     */
++    Csm::csmFloat32 GetPcmSample();
++
++    /**
 +     * @brief 読み込んだwavfileの情報
 +     */
 +    struct WavFileInfo
@@ -3424,20 +4062,97 @@ diff -pruN --exclude build ./demo_clean/src/LAppWavFileHandler.hpp ./demo_dev/sr
 +    } _wavFileInfo;
 +
 +    /**
-      * @brief バイトリーダ
-      */
-     struct ByteReader {
-@@ -225,8 +175,6 @@ private:
-         Csm::csmUint32 _readOffset; ///< ファイル参照位置
-     } _byteReader;
- 
--    Csm::csmByte* _rawData; ///< 正規化される前のバイト列
--    Csm::csmUint64 _rawDataSize; ///< 正規化される前のバイト列の大きさ
-     Csm::csmFloat32** _pcmData; ///< -1から1の範囲で表現された音声データ配列
-     Csm::csmUint32 _sampleOffset; ///< サンプル参照位置
-     Csm::csmFloat32 _lastRms; ///< 最後に計測したRMS値
++     * @brief バイトリーダ
++     */
++    struct ByteReader {
++        /**
++         * @brief コンストラクタ
++         */
++        ByteReader() : _fileByte(NULL), _fileSize(0), _readOffset(0)
++        { }
++
++        /**
++         * @brief 8ビット読み込み
++         * @return Csm::csmUint8 読み取った8ビット値
++         */
++        Csm::csmUint8 Get8()
++        {
++            const Csm::csmUint8 ret = _fileByte[_readOffset];
++            _readOffset++;
++            return ret;
++        }
++
++        /**
++         * @brief 16ビット読み込み（リトルエンディアン）
++         * @return Csm::csmUint16 読み取った16ビット値
++         */
++        Csm::csmUint16 Get16LittleEndian()
++        {
++            const Csm::csmUint16 ret = (_fileByte[_readOffset + 1] << 8) | _fileByte[_readOffset];
++            _readOffset += 2;
++            return ret;
++        }
++
++        /**
++         * @brief 24ビット読み込み（リトルエンディアン）
++         * @return Csm::csmUint32 読み取った24ビット値（下位24ビットに設定）
++         */
++        Csm::csmUint32 Get24LittleEndian()
++        {
++            const Csm::csmUint32 ret =
++                (_fileByte[_readOffset + 2] << 16) | (_fileByte[_readOffset + 1] << 8)
++                | _fileByte[_readOffset];
++            _readOffset += 3;
++            return ret;
++        }
++
++        /**
++         * @brief 32ビット読み込み（リトルエンディアン）
++         * @return Csm::csmUint32 読み取った32ビット値
++         */
++        Csm::csmUint32 Get32LittleEndian()
++        {
++            const Csm::csmUint32 ret =
++                (_fileByte[_readOffset + 3] << 24) | (_fileByte[_readOffset + 2] << 16)
++                | (_fileByte[_readOffset + 1] << 8) | _fileByte[_readOffset];
++            _readOffset += 4;
++            return ret;
++        }
++
++        /**
++         * @brief シグネチャの取得と参照文字列との一致チェック
++         * @param[in] reference 検査対象のシグネチャ文字列
++         * @retval  true    一致している
++         * @retval  false   一致していない
++         */
++        Csm::csmBool GetCheckSignature(const Csm::csmString& reference)
++        {
++            Csm::csmChar getSignature[4] = { 0, 0, 0, 0 };
++            const Csm::csmChar* referenceString = reference.GetRawString();
++            if (reference.GetLength() != 4)
++            {
++                return false;
++            }
++            for (Csm::csmUint32 signatureOffset = 0; signatureOffset < 4; signatureOffset++)
++            {
++                getSignature[signatureOffset] = static_cast<Csm::csmChar>(Get8());
++            }
++            return (getSignature[0] == referenceString[0]) && (getSignature[1] == referenceString[1])
++                && (getSignature[2] == referenceString[2]) && (getSignature[3] == referenceString[3]);
++        }
++
++        Csm::csmByte* _fileByte; ///< ロードしたファイルのバイト列
++        Csm::csmSizeInt _fileSize; ///< ファイルサイズ
++        Csm::csmUint32 _readOffset; ///< ファイル参照位置
++    } _byteReader;
++
++    Csm::csmFloat32** _pcmData; ///< -1から1の範囲で表現された音声データ配列
++    Csm::csmUint32 _sampleOffset; ///< サンプル参照位置
++    Csm::csmFloat32 _lastRms; ///< 最後に計測したRMS値
++    Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
++ };
 diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/src/MouseActionManager.cpp
---- ./demo_clean/src/MouseActionManager.cpp	2025-03-23 03:36:38.520068400 +0000
+--- ./demo_clean/src/MouseActionManager.cpp	2025-05-29 18:28:26.219060000 +0100
 +++ ./demo_dev/src/MouseActionManager.cpp	2023-03-05 23:22:10.841970900 +0000
 @@ -1,9 +1,9 @@
 -﻿/**
@@ -3473,7 +4188,74 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/sr
      {
          delete instance;
      }
-@@ -99,18 +99,21 @@ void MouseActionManager::OnMouseCallBack
+@@ -31,12 +31,65 @@ void MouseActionManager::ReleaseInstance
+     instance = NULL;
+ }
+ 
+-MouseActionManager::MouseActionManager() : MouseActionManager_Common()
++MouseActionManager::MouseActionManager()
+ {
+ }
+ 
+ MouseActionManager::~MouseActionManager()
+ {
++    // 行列データの解放
++    delete _viewMatrix;
++
++    delete _touchManager;
++}
++
++void MouseActionManager::Initialize(int windowWidth, int windowHeight)
++{
++    // 行列の初期化
++    ViewInitialize(windowWidth, windowHeight);
++
++    // タッチ関係のイベント管理
++    _touchManager = new TouchManager();
++
++    _captured = false;
++    _mouseX = 0.0f;
++    _mouseY = 0.0f;
++}
++
++void MouseActionManager::ViewInitialize(int windowWidth, int windowHeight)
++{
++    _deviceToScreen = new Csm::CubismMatrix44();
++    _viewMatrix = new CubismSampleViewMatrix(_deviceToScreen, windowWidth, windowHeight);
++}
++
++void MouseActionManager::OnDrag(Csm::csmFloat32 x, Csm::csmFloat32 y)
++{
++    _userModel->SetDragging(x, y);
++}
++
++void MouseActionManager::OnTouchesBegan(float px, float py)
++{
++    _touchManager->TouchesBegan(px, py);
++}
++
++void MouseActionManager::OnTouchesMoved(float px, float py)
++{
++    float screenX = _deviceToScreen->TransformX(_touchManager->GetX()); // 論理座標変換した座標を取得。
++    float viewX = _viewMatrix->InvertTransformX(screenX); // 拡大、縮小、移動後の値。
++
++    float screenY = _deviceToScreen->TransformY(_touchManager->GetY()); // 論理座標変換した座標を取得。
++    float viewY = _viewMatrix->InvertTransformY(screenY); // 拡大、縮小、移動後の値。
++
++    _touchManager->TouchesMoved(px, py);
++
++    // ドラッグ情報を設定
++    _userModel->SetDragging(viewX, viewY);
++}
++
++void MouseActionManager::OnTouchesEnded(float px, float py)
++{
++    // タッチ終了
++    OnDrag(0.0f, 0.0f);
+ }
+ 
+ void MouseActionManager::OnMouseCallBack(GLFWwindow* window, int button, int action, int modify)
+@@ -46,18 +99,21 @@ void MouseActionManager::OnMouseCallBack
          return;
      }
  
@@ -3499,8 +4281,22 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.cpp ./demo_dev/sr
      }
  }
  
+@@ -73,3 +129,13 @@ void MouseActionManager::OnMouseCallBack
+ 
+     OnTouchesMoved(_mouseX, _mouseY);
+ }
++
++CubismSampleViewMatrix * MouseActionManager::GetViewMatrix()
++{
++    return _viewMatrix;
++}
++
++void MouseActionManager::SetUserModel(Csm::CubismUserModel * userModel)
++{
++    _userModel = userModel;
++}
 diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/src/MouseActionManager.hpp
---- ./demo_clean/src/MouseActionManager.hpp	2025-03-23 03:36:38.688427700 +0000
+--- ./demo_clean/src/MouseActionManager.hpp	2025-05-29 18:28:26.328852900 +0100
 +++ ./demo_dev/src/MouseActionManager.hpp	2023-03-05 23:22:10.961094400 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -3508,26 +4304,313 @@ diff -pruN --exclude build ./demo_clean/src/MouseActionManager.hpp ./demo_dev/sr
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
+@@ -17,8 +17,8 @@
+ #include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
+ 
+ #include "LAppDefine.hpp"
+-#include "TouchManager_Common.hpp"
+-#include "MouseActionManager_Common.hpp"
++#include "TouchManager.hpp"
++#include "CubismSampleViewMatrix.hpp"
+ 
+ /**
+ * @brief マウスの動作を通知するクラス
+@@ -26,7 +26,7 @@
+ * マウス操作等を Cubism へ橋渡しする。
+ *
+ */
+-class MouseActionManager : public MouseActionManager_Common
++class MouseActionManager
+ {
+ public:
+   /**
+@@ -48,6 +48,16 @@ public:
+   ~MouseActionManager(); ///< デストラクタ
+ 
+   /**
++  * @brief   必要なものを初期化する
++  */
++  void Initialize(int windowWidth, int windowHeight);
++
++  /**
++  * @brief 行列の初期化をする
++  */
++  void ViewInitialize(int windowWidth, int windowHeight);
++
++  /**
+   * @brief   OpenGL用 glfwSetMouseButtonCallback用関数。
+   *
+   * @param[in]       window            コールバックを呼んだWindow情報
+@@ -65,6 +75,58 @@ public:
+   * @param[in]       y                 x座標
+   */
+   void OnMouseCallBack(GLFWwindow* window, double x, double y);
++
++  /**
++  * @brief _userModelをセットする
++  *
++  */
++  void SetUserModel(Csm::CubismUserModel* userModel);
++
++  /**
++  * @brief _viewMatrixを取得する
++  *
++  */
++  CubismSampleViewMatrix * GetViewMatrix();
++
++private:
++    /**
++    * @brief ドラッグ
++    *
++    * ドラッグ時にどれだけ移動したかを通知する
++    */
++    void OnDrag(Csm::csmFloat32 x, Csm::csmFloat32 y);
++
++    /**
++    * @brief クリック入力始め
++    *
++    * クリックの入力が始まった時に呼ばれる
++    */
++    void OnTouchesBegan(float px, float py);
++
++    /**
++    * @brief クリック入力中の移動
++    *
++    * クリック入力中の移動時に呼ばれる
++    */
++    void OnTouchesMoved(float px, float py);
++
++    /**
++    * @brief クリック入力終了時
++    *
++    * クリックの入力が終了した時に呼ばれる
++    */
++    void OnTouchesEnded(float px, float py);
++
++    Csm::CubismUserModel* _userModel;
++
++    TouchManager* _touchManager;                 ///< タッチマネージャー
++
++    bool _captured;                              ///< クリックしているか
++    float _mouseX;                               ///< マウスX座標
++    float _mouseY;                               ///< マウスY座標
++
++    CubismSampleViewMatrix* _viewMatrix; ///< 画面の表示の拡大縮小や移動の変換を行う行列
++    Csm::CubismMatrix44* _deviceToScreen; ///< デバイスからスクリーンへの行列
+ };
+ 
+ class EventHandler
 diff -pruN --exclude build ./demo_clean/src/TouchManager.cpp ./demo_dev/src/TouchManager.cpp
---- ./demo_clean/src/TouchManager.cpp	2025-03-23 03:36:38.923124200 +0000
+--- ./demo_clean/src/TouchManager.cpp	1970-01-01 00:00:00.000000000 +0000
 +++ ./demo_dev/src/TouchManager.cpp	2023-03-05 23:22:10.861957900 +0000
-@@ -1,4 +1,4 @@
--﻿/**
+@@ -0,0 +1,97 @@
 +/**
-  * Copyright(c) Live2D Inc. All rights reserved.
-  *
-  * Use of this source code is governed by the Live2D Open Software license
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#include "TouchManager.hpp"
++#include <math.h>
++
++TouchManager::TouchManager()
++    : _startY(0.0f)
++    , _startX(0.0f)
++    , _lastX(0.0f)
++    , _lastY(0.0f)
++    , _lastX1(0.0f)
++    , _lastY1(0.0f)
++    , _lastX2(0.0f)
++    , _lastY2(0.0f)
++    , _lastTouchDistance(0.0f)
++    , _deltaX(0.0f)
++    , _deltaY(0.0f)
++    , _scale(1.0f)
++    , _touchSingle(false)
++    , _flipAvailable(false)
++{ }
++
++void TouchManager::TouchesBegan(float deviceX, float deviceY)
++{
++    _lastX = deviceX;
++    _lastY = deviceY;
++    _startX = deviceX;
++    _startY = deviceY;
++    _lastTouchDistance = -1.0f;
++    _flipAvailable = true;
++    _touchSingle = true;
++}
++
++void TouchManager::TouchesMoved(float deviceX, float deviceY)
++{
++    _lastX = deviceX;
++    _lastY = deviceY;
++    _lastTouchDistance = -1.0f;
++    _touchSingle = true;
++}
++
++void TouchManager::TouchesMoved(float deviceX1, float deviceY1, float deviceX2, float deviceY2)
++{
++    float distance = CalculateDistance(deviceX1, deviceY1, deviceX2, deviceY2);
++    float centerX = (deviceX1 + deviceX2) * 0.5f;
++    float centerY = (deviceY1 + deviceY2) * 0.5f;
++
++    if (_lastTouchDistance > 0.0f)
++    {
++        _scale = powf(distance / _lastTouchDistance, 0.75f);
++        _deltaX = CalculateMovingAmount(deviceX1 - _lastX1, deviceX2 - _lastX2);
++        _deltaY = CalculateMovingAmount(deviceY1 - _lastY1, deviceY2 - _lastY2);
++    }
++    else
++    {
++        _scale = 1.0f;
++        _deltaX = 0.0f;
++        _deltaY = 0.0f;
++    }
++
++    _lastX = centerX;
++    _lastY = centerY;
++    _lastX1 = deviceX1;
++    _lastY1 = deviceY1;
++    _lastX2 = deviceX2;
++    _lastY2 = deviceY2;
++    _lastTouchDistance = distance;
++    _touchSingle = false;
++}
++
++float TouchManager::GetFlickDistance() const
++{
++    return CalculateDistance(_startX, _startY, _lastX, _lastY);
++}
++
++float TouchManager::CalculateDistance(float x1, float y1, float x2, float y2) const
++{
++    return sqrtf((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
++}
++
++float TouchManager::CalculateMovingAmount(float v1, float v2)
++{
++    if ((v1 > 0.0f) != (v2 > 0.0f))
++    {
++        return 0.0f;
++    }
++
++    float sign = v1 > 0.0f ? 1.0f : -1.0f;
++    float absoluteValue1 = fabsf(v1);
++    float absoluteValue2 = fabsf(v2);
++    return sign * ((absoluteValue1 < absoluteValue2) ? absoluteValue1 : absoluteValue2);
++}
 diff -pruN --exclude build ./demo_clean/src/TouchManager.hpp ./demo_dev/src/TouchManager.hpp
---- ./demo_clean/src/TouchManager.hpp	2025-03-23 03:36:37.652847100 +0000
+--- ./demo_clean/src/TouchManager.hpp	1970-01-01 00:00:00.000000000 +0000
 +++ ./demo_dev/src/TouchManager.hpp	2023-03-05 23:22:10.884102300 +0000
-@@ -1,4 +1,4 @@
--﻿/**
+@@ -0,0 +1,104 @@
 +/**
-  * Copyright(c) Live2D Inc. All rights reserved.
-  *
-  * Use of this source code is governed by the Live2D Open Software license
++ * Copyright(c) Live2D Inc. All rights reserved.
++ *
++ * Use of this source code is governed by the Live2D Open Software license
++ * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
++ */
++
++#pragma once
++
++class TouchManager
++{
++public:
++
++    TouchManager();
++
++    float GetCenterX() const { return _lastX; }
++    float GetCenterY() const { return _lastY; }
++    float GetDeltaX() const { return _deltaX; }
++    float GetDeltaY() const{ return _deltaY; }
++    float GetStartX() const{ return _startX; }
++    float GetStartY() const{ return _startY; }
++    float GetScale() const { return _scale; }
++    float GetX() const{ return _lastX; }
++    float GetY() const{ return _lastY; }
++    float GetX1() const{ return _lastX1; }
++    float GetY1() const{ return _lastY1; }
++    float GetX2() const{ return _lastX2; }
++    float GetY2() const{ return _lastY2; }
++    bool IsSingleTouch() const { return _touchSingle; }
++    bool IsFlickAvailable() const { return _flipAvailable; }
++    void DisableFlick() { _flipAvailable = false; }
++
++    /*
++    * @brief タッチ開始時イベント
++    *
++    * @param[in] deviceY    タッチした画面のyの値
++    * @param[in] deviceX    タッチした画面のxの値
++    */
++    void TouchesBegan(float deviceX, float deviceY);
++
++    /*
++    * @brief ドラッグ時のイベント
++    *
++    * @param[in] deviceX    タッチした画面のyの値
++    * @param[in] deviceY    タッチした画面のxの値
++    */
++    void TouchesMoved(float deviceX, float deviceY);
++
++    /*
++    * @brief ドラッグ時のイベント
++    *
++    * @param[in] deviceX1   1つめのタッチした画面のxの値
++    * @param[in] deviceY1   1つめのタッチした画面のyの値
++    * @param[in] deviceX2   2つめのタッチした画面のxの値
++    * @param[in] deviceY2   2つめのタッチした画面のyの値
++    */
++    void TouchesMoved(float deviceX1, float deviceY1, float deviceX2, float deviceY2);
++
++    /*
++    * @brief フリックの距離測定
++    *
++    * @return フリック距離
++    */
++    float GetFlickDistance() const;
++
++private:
++    /*
++    * @brief 点1から点2への距離を求める
++    *
++    * @param[in] x1 1つめのタッチした画面のxの値
++    * @param[in] y1 1つめのタッチした画面のyの値
++    * @param[in] x2 2つめのタッチした画面のxの値
++    * @param[in] y2 2つめのタッチした画面のyの値
++    * @return   2点の距離
++    */
++    float CalculateDistance(float x1, float y1, float x2, float y2) const;
++
++    /*
++    * 二つの値から、移動量を求める。
++    * 違う方向の場合は移動量０。同じ方向の場合は、絶対値が小さい方の値を参照する
++    *
++    * @param[in] v1    1つめの移動量
++    * @param[in] v2    2つめの移動量
++    *
++    * @return   小さい方の移動量
++    */
++    float CalculateMovingAmount(float v1, float v2);
++
++    float _startY;              // タッチを開始した時のxの値
++    float _startX;              // タッチを開始した時のyの値
++    float _lastX;               // シングルタッチ時のxの値
++    float _lastY;               // シングルタッチ時のyの値
++    float _lastX1;              // ダブルタッチ時の一つ目のxの値
++    float _lastY1;              // ダブルタッチ時の一つ目のyの値
++    float _lastX2;              // ダブルタッチ時の二つ目のxの値
++    float _lastY2;              // ダブルタッチ時の二つ目のyの値
++    float _lastTouchDistance;   // 2本以上でタッチしたときの指の距離
++    float _deltaX;              // 前回の値から今回の値へのxの移動距離。
++    float _deltaY;              // 前回の値から今回の値へのyの移動距離。
++    float _scale;               // このフレームで掛け合わせる拡大率。拡大操作中以外は1。
++    bool _touchSingle;          // シングルタッチ時はtrue
++    bool _flipAvailable;        // フリップが有効かどうか
++
++};
 diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
---- ./demo_clean/src/main.cpp	2025-03-23 03:36:38.089628300 +0000
+--- ./demo_clean/src/main.cpp	2025-05-29 18:28:26.046369000 +0100
 +++ ./demo_dev/src/main.cpp	2023-03-05 23:22:10.772150300 +0000
 @@ -1,30 +1,166 @@
 -﻿/**
@@ -3710,7 +4793,7 @@ diff -pruN --exclude build ./demo_clean/src/main.cpp ./demo_dev/src/main.cpp
  }
 -
 diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainMinimum.cpp
---- ./demo_clean/src/mainMinimum.cpp	2025-03-23 03:36:38.779425400 +0000
+--- ./demo_clean/src/mainMinimum.cpp	2025-05-29 18:28:26.376126800 +0100
 +++ ./demo_dev/src/mainMinimum.cpp	2023-03-05 23:22:10.854990900 +0000
 @@ -1,4 +1,4 @@
 -﻿/**
@@ -3718,7 +4801,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
   * Copyright(c) Live2D Inc. All rights reserved.
   *
   * Use of this source code is governed by the Live2D Open Software license
-@@ -7,7 +7,8 @@
+@@ -7,26 +7,24 @@
  
  #include <functional>
  
@@ -3728,13 +4811,13 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  #include <GL/glew.h>
  #include <GLFW/glfw3.h>
  
-@@ -15,19 +16,15 @@
- #include "LAppAllocator.hpp"
+ #include "LAppDefine.hpp"
+-#include "LAppAllocator_Common.hpp"
++#include "LAppAllocator.hpp"
  #include "LAppTextureManager.hpp"
  #include "LAppPal.hpp"
--#include "TouchManager.hpp"
+-#include "TouchManager_Common.hpp"
  #include "CubismUserModelExtend.hpp"
--#include "CubismSampleViewMatrix.hpp"
  #include "MouseActionManager.hpp"
  
  #include <CubismFramework.hpp>
@@ -3748,7 +4831,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  
  /**
  *@brief モデルデータのディレクトリ名
-@@ -36,8 +33,6 @@
+@@ -35,8 +33,6 @@
  static const Csm::csmChar* _modelDirectoryName = "Hiyori";
  
  static Csm::CubismUserModel* _userModel; ///< ユーザーが実際に使用するモデル
@@ -3757,7 +4840,12 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  
  Csm::csmFloat32 _userTimeSeconds; ///< デルタ時間の積算値[秒]
  Csm::csmVector<Csm::CubismIdHandle> _eyeBlinkIds; ///< モデルに設定されたまばたき機能用パラメータID
-@@ -66,8 +61,8 @@ static LAppAllocator _cubismAllocator; /
+@@ -61,12 +57,12 @@ Csm::csmFloat32 _accelerationY;
+ Csm::csmFloat32 _accelerationZ;                 ///< Z軸方向の加速度
+ 
+ static Csm::CubismFramework::Option _cubismOption; ///< CubismFrameworkに関するオプション
+-static LAppAllocator_Common _cubismAllocator; ///< メモリのアロケーター
++static LAppAllocator _cubismAllocator; ///< メモリのアロケーター
  
  static LAppTextureManager* _textureManager; ///< テクスチャの管理
  
@@ -3767,7 +4855,16 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  
  static GLFWwindow* _window; ///< ウィンドウオブジェクト
  
-@@ -90,18 +85,71 @@ static void InitializeCubism()
+@@ -82,8 +78,6 @@ static void InitializeCubism()
+     //setup cubism
+     _cubismOption.LogFunction = LAppPal::PrintMessage;
+     _cubismOption.LoggingLevel = Csm::CubismFramework::Option::LogLevel_Verbose;
+-    _cubismOption.LoadFileFunction = LAppPal::LoadFileAsBytes;
+-    _cubismOption.ReleaseBytesFunction = LAppPal::ReleaseBytes;
+     Csm::CubismFramework::StartUp(&_cubismAllocator, &_cubismOption);
+ 
+     //Initialize cubism
+@@ -91,18 +85,71 @@ static void InitializeCubism()
  }
  
  /**
@@ -3841,7 +4938,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  
          return GL_FALSE;
      }
-@@ -110,7 +158,7 @@ static bool InitializeSystem()
+@@ -111,7 +158,7 @@ static bool InitializeSystem()
      _window = glfwCreateWindow(LAppDefine::RenderTargetWidth, LAppDefine::RenderTargetHeight, "SIMPLE_SAMPLE", NULL, NULL);
      if (_window == NULL)
      {
@@ -3850,7 +4947,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  
          glfwTerminate();
          return GL_FALSE;
-@@ -121,7 +169,7 @@ static bool InitializeSystem()
+@@ -122,7 +169,7 @@ static bool InitializeSystem()
      glfwSwapInterval(1);
  
      if (glewInit() != GLEW_OK) {
@@ -3859,7 +4956,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  
          glfwTerminate();
          return GL_FALSE;
-@@ -149,6 +197,8 @@ static bool InitializeSystem()
+@@ -150,6 +197,8 @@ static bool InitializeSystem()
      // ドラッグ入力管理クラスの初期化
      MouseActionManager::GetInstance()->Initialize(windowWidth, windowHeight);
  
@@ -3868,7 +4965,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
      return GL_TRUE;
  }
  
-@@ -182,16 +232,6 @@ void Release()
+@@ -183,16 +232,6 @@ void Release()
  }
  
  /**
@@ -3885,7 +4982,7 @@ diff -pruN --exclude build ./demo_clean/src/mainMinimum.cpp ./demo_dev/src/mainM
  * @brief モデルの読み込み
  *
  * モデルデータの読み込み処理を行う
-@@ -201,13 +241,15 @@ void SetAssetDirectory(const std::string
+@@ -202,13 +241,15 @@ void SetAssetDirectory(const std::string
  void LoadModel(const std::string modelDirectoryName)
  {
      // モデルのディレクトリを指定

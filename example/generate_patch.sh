@@ -1,11 +1,7 @@
 #!/bin/sh
 
-mkdir -p demo_clean
-
 if [ "$OSTYPE" = "msys" -o "$OSTYPE" = "cygwin" ]; then
-    cp -p -r CubismSdkForNative-5-r.4.1/Samples/OpenGL/Demo/proj.win.cmake/* ./demo_clean/
-    diff -pruN --exclude build ./demo_clean ./demo_dev > ./demo_win.patch
+    git -C demo_dev diff orig > ./demo_win.patch
 else
-    cp -p -r CubismSdkForNative-5-r.4.1/Samples/OpenGL/Demo/proj.linux.cmake/* ./demo_clean/
-    diff -pruN --exclude build ./demo_clean ./demo_dev > ./demo.patch
+    git -C demo_dev diff orig > ./demo.patch
 fi
